@@ -39,7 +39,6 @@ price_compare/
     └── logos/
         ├── amazon.png
         ├── flipkart.png
-        ├── reliance.png
         └── default.png
 
 🚀 How It Works
