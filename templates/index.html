@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Price Compare</title>
-
+<title>Future Shop</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600;800&display=swap" rel="stylesheet">
 <style>
+/* --- CINEMATIC BASE STYLES --- */
 body {
-    background: #0b0f1a;
+    background: #050505;
     color: white;
-    font-family: Arial;
+    font-family: 'Poppins', sans-serif;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -16,97 +17,153 @@ body {
     overflow: hidden;
 }
 
-/* Particle canvas */
 #particles-bg {
     position: fixed;
     inset: 0;
     z-index: 0;
 }
 
-/* Keep UI above particles */
-body > *:not(canvas) {
+/* --- GLASS UI CONTAINER --- */
+.hero-container {
     position: relative;
-    z-index: 1;
-}
-
-.container {
-    background: rgba(255,255,255,0.08);
-    backdrop-filter: blur(20px);
-    padding: 30px;
-    border-radius: 15px;
-    width: 400px;
+    z-index: 10;
     text-align: center;
+    width: 100%;
+    max-width: 600px;
+    padding: 40px;
 }
 
-input, select, button {
-    width: 100%;
-    margin: 10px 0;
+/* --- TYPOGRAPHY FROM VIDEO --- */
+h1 {
+    font-size: 4rem;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 10px;
+    background: linear-gradient(to right, #fff, #a5b4fc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 30px rgba(124, 77, 255, 0.3);
+}
+
+p.subtitle {
+    font-size: 1.2rem;
+    color: #94a3b8;
+    margin-bottom: 40px;
+    letter-spacing: 1px;
+}
+
+/* --- GLOWING INPUT FORM --- */
+.glass-form {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     padding: 10px;
-    border-radius: 8px;
+    border-radius: 50px; /* Pill shape */
+    display: flex;
+    box-shadow: 0 0 50px rgba(124, 77, 255, 0.1);
+    transition: 0.3s;
+}
+
+.glass-form:focus-within {
+    box-shadow: 0 0 60px rgba(0, 229, 255, 0.2);
+    border-color: rgba(0, 229, 255, 0.3);
+}
+
+input {
+    background: transparent;
     border: none;
+    color: white;
+    font-size: 1.1rem;
+    padding: 15px 25px;
+    flex-grow: 1;
+    outline: none;
+}
+
+select {
+    background: #0f172a;
+    color: #ccc;
+    border: none;
+    padding: 0 15px;
+    border-left: 1px solid rgba(255,255,255,0.1);
+    outline: none;
+    cursor: pointer;
+    border-radius: 0;
 }
 
 button {
     background: linear-gradient(135deg, #7c4dff, #00e5ff);
-    font-weight: bold;
+    color: #000;
+    font-weight: 800;
+    border: none;
+    padding: 15px 35px;
+    border-radius: 40px;
     cursor: pointer;
+    transition: transform 0.2s;
+    font-size: 1rem;
+}
+
+button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(0, 229, 255, 0.6);
 }
 </style>
 </head>
-
 <body>
 
-<!-- Particle Background -->
 <canvas id="particles-bg"></canvas>
 
-<div class="container">
-    <h2>Find the Best Price</h2>
-    <form method="POST" action="/search">
-        <input type="text" name="product" placeholder="Enter product name" required>
-
-        <!-- FILE UPLOAD REMOVED -->
-
+<div class="hero-container">
+    <h1>The Future<br>of Shopping</h1>
+    <p class="subtitle">AI-POWERED PRICE COMPARISON</p>
+    
+    <form class="glass-form" method="POST" action="/search">
+        <input type="text" name="product" placeholder="Search for a product..." required autocomplete="off">
+        
         <select name="sort">
-            <option value="high">High → Low</option>
-            <option value="low">Low → High</option>
+            <option value="low">Lowest Price</option>
+            <option value="high">Highest Price</option>
         </select>
 
-        <button type="submit">Compare</button>
+        <button type="submit">SEARCH</button>
     </form>
 </div>
 
-<!-- Particle Script -->
 <script>
 const canvas = document.getElementById("particles-bg");
 const ctx = canvas.getContext("2d");
+let width, height;
 
 function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    width = window.innerWidth;
+    height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
 }
-resize();
 window.addEventListener("resize", resize);
+resize();
 
-const particles = Array.from({ length: 120 }, () => ({
-    x: Math.random() * canvas.width,
-    y: Math.random() * canvas.height,
-    dx: (Math.random() - 0.5) * 0.3,
-    dy: (Math.random() - 0.5) * 0.3,
-    r: Math.random() * 2 + 0.5
+const particles = Array.from({ length: 100 }, () => ({
+    x: Math.random() * width,
+    y: Math.random() * height,
+    dx: (Math.random() - 0.5) * 0.5,
+    dy: (Math.random() - 0.5) * 0.5,
+    size: Math.random() * 2,
+    alpha: Math.random() * 0.5 + 0.1
 }));
 
 function animate() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#7c4dff";
+    ctx.clearRect(0, 0, width, height);
     particles.forEach(p => {
         p.x += p.dx;
         p.y += p.dy;
-
-        if (p.x < 0 || p.x > canvas.width) p.dx *= -1;
-        if (p.y < 0 || p.y > canvas.height) p.dy *= -1;
+        if (p.x < 0) p.x = width;
+        if (p.x > width) p.x = 0;
+        if (p.y < 0) p.y = height;
+        if (p.y > height) p.y = 0;
 
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(124, 77, 255, ${p.alpha})`; // Purple particles
         ctx.fill();
     });
     requestAnimationFrame(animate);
