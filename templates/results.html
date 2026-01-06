@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Results</title>
+
+<style>
+body {
+    background: #0b0f1a;
+    color: white;
+    font-family: Arial;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px,1fr));
+    gap: 25px;
+    padding: 40px;
+}
+
+.card {
+    background: #12182b;
+    padding: 20px;
+    border-radius: 20px;
+    transition: transform 0.2s;
+    transform-style: preserve-3d;
+}
+
+.card:hover {
+    box-shadow: 0 0 30px rgba(0,229,255,0.4);
+}
+
+.logo {
+    width: 80px;
+    margin-bottom: 10px;
+}
+
+.price {
+    font-size: 26px;
+    color: #00e5ff;
+}
+
+a {
+    display: inline-block;
+    margin-top: 10px;
+    color: black;
+    background: linear-gradient(135deg,#00e5ff,#7c4dff);
+    padding: 10px 18px;
+    border-radius: 20px;
+    text-decoration: none;
+    font-weight: bold;
+}
+</style>
+
+<script>
+document.addEventListener("mousemove", e => {
+    document.querySelectorAll(".card").forEach(card => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const cx = rect.width / 2;
+        const cy = rect.height / 2;
+
+        const rotateX = (cy - y) / 20;
+        const rotateY = (x - cx) / 20;
+
+        card.style.transform =
+            `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+    });
+});
+</script>
+</head>
+
+<body>
+
+<h2 style="text-align:center;">Results for "{{ product }}"</h2>
+
+<div class="grid">
+{% for r in results %}
+    <div class="card">
+        <img src="/static/logos/{{ r.logo }}" class="logo">
+        <h3>{{ r.title }}</h3>
+        <p>{{ r.store }}</p>
+        <div class="price">{{ r.price }}</div>
+        <a href="{{ r.link }}" target="_blank">View Offer</a>
+    </div>
+{% endfor %}
+</div>
+
+</body>
+</html>

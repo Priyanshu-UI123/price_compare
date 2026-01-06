@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Price Compare</title>
+
+<style>
+body {
+    background: #0b0f1a;
+    color: white;
+    font-family: Arial;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.box {
+    background: #12182b;
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 0 40px rgba(0,0,0,0.6);
+}
+
+input, select {
+    padding: 12px;
+    width: 260px;
+    margin: 10px 0;
+    border-radius: 10px;
+    border: none;
+}
+
+button {
+    padding: 12px 30px;
+    border-radius: 25px;
+    border: none;
+    background: linear-gradient(135deg,#00e5ff,#7c4dff);
+    font-weight: bold;
+    cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+    <h1>Price Comparison</h1>
+
+    <form action="/search" method="POST" enctype="multipart/form-data">
+        <input type="text" name="product" placeholder="Product name">
+
+        <input type="file" name="image" accept="image/*">
+
+        <select name="sort">
+            <option value="high">High → Low</option>
+            <option value="low">Low → High</option>
+        </select>
+
+        <br>
+        <button type="submit">Compare</button>
+    </form>
+</div>
+
+</body>
+</html>
