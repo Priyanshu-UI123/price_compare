@@ -32,6 +32,7 @@ header {
     position: sticky;
     top: 0;
     z-index: 100;
+    gap: 20px;
 }
 
 .header-left h2 {
@@ -52,10 +53,30 @@ header {
 }
 .back-btn:hover { color: #38bdf8; }
 
-/* --- HEADER SORT SELECTOR --- */
-.sort-container {
+/* --- CONTROLS CONTAINER (Search + Sort) --- */
+.controls {
     display: flex;
+    gap: 15px;
     align-items: center;
+}
+
+/* Store Filter Input */
+.store-filter {
+    background: rgba(30, 41, 59, 0.6);
+    color: #e0f2fe;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    outline: none;
+    transition: 0.3s;
+    width: 200px;
+}
+
+.store-filter:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
 }
 
 .sort-select {
@@ -106,6 +127,7 @@ header {
     animation: cardSlideUp 0.6s ease-out forwards;
 }
 
+/* Animation Staggering */
 .card:nth-child(1) { animation-delay: 0.1s; }
 .card:nth-child(2) { animation-delay: 0.2s; }
 .card:nth-child(3) { animation-delay: 0.3s; }
@@ -147,6 +169,10 @@ header {
     margin-bottom: 10px;
     font-size: 0.85rem;
     color: #94a3b8;
+}
+
+.store-name {
+    font-weight: 600; /* Added for easy JS targeting */
 }
 
 .store-logo {
@@ -193,6 +219,11 @@ h3 {
     letter-spacing: 1px;
     box-shadow: 0 0 20px rgba(56, 189, 248, 0.6);
 }
+
+/* Hidden class for filtering */
+.hidden {
+    display: none !important;
+}
 </style>
 </head>
 <body>
@@ -203,10 +234,11 @@ h3 {
         <a href="/" class="back-btn">← Search Again</a>
     </div>
 
-    <div class="sort-container">
-        <form action="/search" method="POST">
+    <div class="controls">
+        <input type="text" id="storeInput" class="store-filter" placeholder="Filter by Store (e.g. Amazon)">
+
+        <form action="/search" method="POST" style="margin:0;">
             <input type="hidden" name="product" value="{{ product }}">
-            
             <select name="sort" class="sort-select" onchange="this.form.submit()">
                 <option value="low" {% if sort_order == 'low' %}selected{% endif %}>Price: Low → High</option>
                 <option value="high" {% if sort_order == 'high' %}selected{% endif %}>Price: High → Low</option>
@@ -215,9 +247,9 @@ h3 {
     </div>
 </header>
 
-<div class="grid">
+<div class="grid" id="resultsGrid">
 {% for r in results %}
-  <div class="card">
+  <div class="card" data-store="{{ r.store | lower }}">
     <div class="img-container">
         {% if r.thumbnail %}
             <img src="{{ r.thumbnail }}" class="product-img">
@@ -228,7 +260,7 @@ h3 {
     
     <div class="store-info">
       <img src="{{ url_for('static', filename='logos/' + r.logo) }}" class="store-logo">
-      <span>{{ r.store }}</span>
+      <span class="store-name">{{ r.store }}</span>
     </div>
 
     <h3>{{ r.title }}</h3>
@@ -237,6 +269,27 @@ h3 {
   </div>
 {% endfor %}
 </div>
+
+<script>
+    // Real-time filtering script
+    const storeInput = document.getElementById('storeInput');
+    const cards = document.querySelectorAll('.card');
+
+    storeInput.addEventListener('input', function(e) {
+        const searchText = e.target.value.toLowerCase();
+
+        cards.forEach(card => {
+            const storeName = card.getAttribute('data-store');
+            
+            // If store name matches search OR search is empty, show card
+            if (storeName.includes(searchText) || searchText === '') {
+                card.classList.remove('hidden');
+            } else {
+                card.classList.add('hidden');
+            }
+        });
+    });
+</script>
 
 </body>
 </html>
