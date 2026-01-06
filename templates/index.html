@@ -12,29 +12,42 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
+    margin: 0;
+    overflow: hidden;
 }
 
-.box {
-    background: #12182b;
-    padding: 40px;
-    border-radius: 20px;
+/* Particle canvas */
+#particles-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+}
+
+/* Keep UI above particles */
+body > *:not(canvas) {
+    position: relative;
+    z-index: 1;
+}
+
+.container {
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(20px);
+    padding: 30px;
+    border-radius: 15px;
+    width: 400px;
     text-align: center;
-    box-shadow: 0 0 40px rgba(0,0,0,0.6);
 }
 
-input, select {
-    padding: 12px;
-    width: 260px;
+input, select, button {
+    width: 100%;
     margin: 10px 0;
-    border-radius: 10px;
+    padding: 10px;
+    border-radius: 8px;
     border: none;
 }
 
 button {
-    padding: 12px 30px;
-    border-radius: 25px;
-    border: none;
-    background: linear-gradient(135deg,#00e5ff,#7c4dff);
+    background: linear-gradient(135deg, #7c4dff, #00e5ff);
     font-weight: bold;
     cursor: pointer;
 }
@@ -43,23 +56,63 @@ button {
 
 <body>
 
-<div class="box">
-    <h1>Price Comparison</h1>
+<!-- Particle Background -->
+<canvas id="particles-bg"></canvas>
 
-    <form action="/search" method="POST" enctype="multipart/form-data">
-        <input type="text" name="product" placeholder="Product name">
+<div class="container">
+    <h2>Find the Best Price</h2>
+    <form method="POST" action="/search">
+        <input type="text" name="product" placeholder="Enter product name" required>
 
-        <input type="file" name="image" accept="image/*">
+        <!-- FILE UPLOAD REMOVED -->
 
         <select name="sort">
             <option value="high">High → Low</option>
             <option value="low">Low → High</option>
         </select>
 
-        <br>
         <button type="submit">Compare</button>
     </form>
 </div>
+
+<!-- Particle Script -->
+<script>
+const canvas = document.getElementById("particles-bg");
+const ctx = canvas.getContext("2d");
+
+function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener("resize", resize);
+
+const particles = Array.from({ length: 120 }, () => ({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    dx: (Math.random() - 0.5) * 0.3,
+    dy: (Math.random() - 0.5) * 0.3,
+    r: Math.random() * 2 + 0.5
+}));
+
+function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#7c4dff";
+    particles.forEach(p => {
+        p.x += p.dx;
+        p.y += p.dy;
+
+        if (p.x < 0 || p.x > canvas.width) p.dx *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.dy *= -1;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+    });
+    requestAnimationFrame(animate);
+}
+animate();
+</script>
 
 </body>
 </html>
