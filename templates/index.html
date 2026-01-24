@@ -2,306 +2,85 @@
 <html>
 <head>
 <title>Future Shop</title>
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6057432603192716"
-     crossorigin="anonymous"></script>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600;800&display=swap" rel="stylesheet">
 <style>
-/* --- DARK AZURE THEME BASE --- */
-body {
-    background: #020617; /* Very dark navy/black */
-    color: white;
-    font-family: 'Poppins', sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
-    overflow: hidden;
-}
+body { background: #020617; color: white; font-family: 'Poppins', sans-serif; overflow: hidden; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+#particles-bg { position: fixed; inset: 0; z-index: 0; }
+.hero-container { position: relative; z-index: 10; text-align: center; }
+h1 { font-size: 4rem; font-weight: 800; background: linear-gradient(to right, #e0f2fe, #0ea5e9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
+.subtitle { color: #94a3b8; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 40px; }
+.glass-form { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(56, 189, 248, 0.2); padding: 8px; border-radius: 60px; display: inline-flex; align-items: center; }
+input { background: transparent; border: none; color: white; padding: 15px 25px; outline: none; font-size: 1.1rem; width: 300px; }
+select { background: rgba(30, 41, 59, 0.5); color: #e0f2fe; border: 1px solid rgba(56, 189, 248, 0.2); padding: 14px; border-radius: 50px; outline: none; margin: 0 10px; cursor: pointer; }
+select option { background: #0f172a; }
+button { background: linear-gradient(135deg, #0284c7, #38bdf8); color: #fff; border: none; padding: 15px 40px; border-radius: 50px; cursor: pointer; font-weight: 800; font-size: 1rem; transition: transform 0.2s; }
+button:hover { transform: scale(1.05); }
 
-#particles-bg {
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-}
-
-/* --- MAIN HERO UI --- */
-.hero-container {
-    position: relative;
-    z-index: 10;
-    text-align: center;
-    width: 100%;
-    max-width: 700px; /* Slightly wider to fit the new pills */
-    padding: 40px;
-    transition: all 0.8s ease-in;
-}
-
-h1 {
-    font-size: 4rem;
-    font-weight: 800;
-    line-height: 1.1;
-    margin-bottom: 10px;
-    background: linear-gradient(to right, #e0f2fe, #0ea5e9);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    text-shadow: 0 0 40px rgba(14, 165, 233, 0.3);
-}
-
-p.subtitle {
-    font-size: 1.2rem;
-    color: #94a3b8;
-    margin-bottom: 40px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-}
-
-/* --- GLASS FORM BAR --- */
-.glass-form {
-    background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(56, 189, 248, 0.2);
-    padding: 8px; /* Reduced padding since elements have their own */
-    border-radius: 60px; /* Larger pill container */
-    display: flex;
-    align-items: center; /* Center items vertically */
-    box-shadow: 0 0 50px rgba(2, 132, 199, 0.1);
-    transition: 0.3s;
-}
-
-.glass-form:focus-within {
-    box-shadow: 0 0 60px rgba(14, 165, 233, 0.3);
-    border-color: rgba(56, 189, 248, 0.6);
-}
-
-input {
-    background: transparent;
-    border: none;
-    color: white;
-    font-size: 1.1rem;
-    padding: 15px 25px;
-    flex-grow: 1;
-    outline: none;
-}
-
-/* --- NEW PILL SHAPED SELECTOR --- */
-select {
-    background: rgba(30, 41, 59, 0.5); /* Distinct semi-transparent bg */
-    color: #e0f2fe;
-    border: 1px solid rgba(56, 189, 248, 0.2);
-    padding: 14px 20px;
-    margin: 0 10px; /* Spacing between input and button */
-    border-radius: 50px; /* PILL SHAPE */
-    cursor: pointer;
-    outline: none;
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.95rem;
-    transition: 0.3s;
-}
-
-select:hover {
-    background: rgba(56, 189, 248, 0.1);
-    border-color: #38bdf8;
-}
-
-select option {
-    background: #0f172a; /* Dark dropdown bg */
-    color: white;
-}
-
-/* --- SEARCH BUTTON --- */
-button {
-    background: linear-gradient(135deg, #0284c7, #38bdf8);
-    color: #fff;
-    font-weight: 800;
-    border: none;
-    padding: 15px 40px;
-    border-radius: 50px;
-    cursor: pointer;
-    transition: transform 0.2s;
-    font-size: 1rem;
-    box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);
-    flex-shrink: 0; /* Prevent button from squishing */
-}
-
-button:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 30px rgba(56, 189, 248, 0.7);
-}
-
-/* --- FOOTER CREDIT --- */
-.footer-credit {
-    position: fixed;
-    bottom: 20px;
-    left: 0;
-    width: 100%;
-    text-align: center;
-    color: #94a3b8;
-    font-size: 0.9rem;
-    letter-spacing: 1px;
-    z-index: 10;
-    opacity: 0.7;
-    transition: 0.3s;
-}
-
-.footer-credit:hover {
-    opacity: 1;
-    color: #38bdf8;
-    text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
-}
-
-/* --- TRANSITIONS --- */
-.ui-zoom-out {
-    transform: scale(2);
-    opacity: 0;
-    filter: blur(20px);
-}
-
-#loader-overlay {
-    position: fixed;
-    inset: 0;
-    background: #020617; 
-    z-index: 9999;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.5s ease;
-}
-
-.tunnel-circle {
-    width: 100px;
-    height: 100px;
-    border: 2px solid rgba(2, 132, 199, 0.6);
-    border-radius: 50%;
-    position: absolute;
-    animation: zoom 1.5s infinite linear;
-    box-shadow: 0 0 30px rgba(56, 189, 248, 0.4);
-}
-
-.tunnel-circle:nth-child(1) { animation-delay: 0s; }
-.tunnel-circle:nth-child(2) { animation-delay: 0.3s; }
-.tunnel-circle:nth-child(3) { animation-delay: 0.6s; }
-.tunnel-circle:nth-child(4) { animation-delay: 0.9s; }
-
-@keyframes zoom {
-    0% { transform: scale(0.1); opacity: 0; }
-    50% { opacity: 1; }
-    100% { transform: scale(4); opacity: 0; border-width: 10px; }
-}
-
-.loading-text {
-    color: #e0f2fe;
-    font-family: 'Poppins', sans-serif;
-    font-size: 1.5rem;
-    font-weight: 600;
-    letter-spacing: 6px;
-    text-transform: uppercase;
-    margin-top: 250px;
-    text-shadow: 0 0 20px #0ea5e9;
-    animation: pulse 1s infinite alternate;
-}
-
-@keyframes pulse {
-    from { opacity: 0.4; }
-    to { opacity: 1; text-shadow: 0 0 40px #38bdf8; }
-}
+/* DROPDOWN MENU */
+.nav-bar { position: absolute; top: 20px; right: 40px; z-index: 100; }
+.user-menu-btn { background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.dropdown-content { display: none; position: absolute; right: 0; top: 50px; background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 12px; min-width: 160px; backdrop-filter: blur(10px); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+.dropdown-content a { color: #e2e8f0; padding: 12px 16px; text-decoration: none; display: block; font-size: 0.9rem; transition: 0.2s; }
+.dropdown-content a:hover { background: rgba(56, 189, 248, 0.2); }
+.show { display: block; }
 </style>
 </head>
 <body>
-
 <canvas id="particles-bg"></canvas>
+
+<div class="nav-bar">
+    <div class="user-menu-btn" onclick="toggleMenu()">👤 {{ user.username }} ▼</div>
+    <div class="dropdown-content" id="userDropdown">
+        <a href="/account">⚙️ My Account</a>
+        <a href="/account">🕒 Search History</a>
+        <div style="height:1px; background:rgba(255,255,255,0.1); margin: 0 10px;"></div>
+        <a href="/logout" style="color: #ff4d4d;">🚪 Logout</a>
+    </div>
+</div>
 
 <div class="hero-container">
     <h1>The Future<br>of Shopping</h1>
     <p class="subtitle">Search. Compare. Save.</p>
-    
     <form class="glass-form" method="POST" action="/search">
-        <input type="text" name="product" placeholder="What are you looking for?" required autocomplete="off">
-        
+        <input type="text" name="product" placeholder="What are you looking for?" required>
         <select name="sort">
             <option value="low">Price: Low to High</option>
             <option value="high">Price: High to Low</option>
         </select>
-
         <button type="submit">SEARCH</button>
     </form>
 </div>
 
-<div class="footer-credit">
-    Made With ❤️ By Priyansu
-</div>
-
-<div id="loader-overlay">
-    <div class="tunnel-circle"></div>
-    <div class="tunnel-circle"></div>
-    <div class="tunnel-circle"></div>
-    <div class="tunnel-circle"></div>
-    <div class="loading-text">Scanning Data Stream...</div>
-</div>
-
 <script>
-const canvas = document.getElementById("particles-bg");
-const ctx = canvas.getContext("2d");
-let width, height;
+    const canvas = document.getElementById("particles-bg");
+    const ctx = canvas.getContext("2d");
+    let w, h;
+    function resize() { w = window.innerWidth; h = window.innerHeight; canvas.width = w; canvas.height = h; }
+    window.addEventListener("resize", resize); resize();
+    const particles = Array.from({ length: 80 }, () => ({
+        x: Math.random() * w, y: Math.random() * h,
+        dx: (Math.random()-0.5)*0.5, dy: (Math.random()-0.5)*0.5,
+        size: Math.random()*2, alpha: Math.random()*0.5+0.1
+    }));
+    function animate() {
+        ctx.clearRect(0,0,w,h);
+        particles.forEach(p => {
+            p.x += p.dx; p.y += p.dy;
+            if(p.x<0) p.x=w; if(p.x>w) p.x=0; if(p.y<0) p.y=h; if(p.y>h) p.y=0;
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+            ctx.fillStyle = `rgba(56, 189, 248, ${p.alpha})`; ctx.fill();
+        });
+        requestAnimationFrame(animate);
+    }
+    animate();
 
-function resize() {
-    width = window.innerWidth;
-    height = window.innerHeight;
-    canvas.width = width;
-    canvas.height = height;
-}
-window.addEventListener("resize", resize);
-resize();
-
-const particles = Array.from({ length: 100 }, () => ({
-    x: Math.random() * width,
-    y: Math.random() * height,
-    dx: (Math.random() - 0.5) * 0.5,
-    dy: (Math.random() - 0.5) * 0.5,
-    size: Math.random() * 2,
-    alpha: Math.random() * 0.5 + 0.1
-}));
-
-function animate() {
-    ctx.clearRect(0, 0, width, height);
-    particles.forEach(p => {
-        p.x += p.dx;
-        p.y += p.dy;
-        if (p.x < 0) p.x = width;
-        if (p.x > width) p.x = 0;
-        if (p.y < 0) p.y = height;
-        if (p.y > height) p.y = 0;
-
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(56, 189, 248, ${p.alpha})`; 
-        ctx.fill();
-    });
-    requestAnimationFrame(animate);
-}
-animate();
-
-const form = document.querySelector('form');
-const hero = document.querySelector('.hero-container');
-const loader = document.getElementById('loader-overlay');
-const footer = document.querySelector('.footer-credit');
-
-form.addEventListener('submit', function(e) {
-    hero.classList.add('ui-zoom-out');
-    footer.style.opacity = '0';
-    loader.style.opacity = '1';
-    loader.style.pointerEvents = 'all';
-});
-
-window.addEventListener('pageshow', function() {
-    hero.classList.remove('ui-zoom-out');
-    loader.style.opacity = '0';
-    loader.style.pointerEvents = 'none';
-    footer.style.opacity = '0.7';
-});
+    function toggleMenu() { document.getElementById("userDropdown").classList.toggle("show"); }
+    window.onclick = function(e) {
+        if (!e.target.matches('.user-menu-btn')) {
+            var dd = document.getElementsByClassName("dropdown-content");
+            for(var i=0; i<dd.length; i++) { if (dd[i].classList.contains('show')) dd[i].classList.remove('show'); }
+        }
+    }
 </script>
-
 </body>
 </html>
