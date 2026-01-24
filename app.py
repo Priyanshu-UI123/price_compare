@@ -10,16 +10,19 @@ app = Flask(__name__)
 
 # --- CONFIGURATION ---
 
-# 1. DATABASE CONNECTION
-# If you cannot get Environment Variables to work, paste your Neon connection string inside the quotes below.
+# 1. OPTIONAL: Paste your Neon link here if Environment Variables fail
 # Example: "postgres://neondb_owner:AbCd@ep-cool-frog.us-east-2.aws.neon.tech/neondb"
-NEON_DB_URL = "postgresql://neondb_owner:npg_WLq6Bc9dKowM@ep-weathered-smoke-ah05dveh.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+NEON_DB_URL = "postgresql://neondb_owner:npg_WLq6Bc9dKowM@ep-weathered-smoke-ah05dveh.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require" 
 
-# Logic to choose the correct database:
-# 1. Tries to find 'DATABASE_URL' from Render Environment Variables.
-# 2. If not found, uses the 'NEON_DB_URL' you pasted above.
-# 3. If neither exists, falls back to a local 'users.db' file (for testing on laptop).
-database_url = os.environ.get('DATABASE_URL') or (NEON_DB_URL if "postgres" in NEON_DB_URL else 'sqlite:///users.db')
+# 2. Database Logic
+# First, look for Render's built-in DATABASE_URL. 
+# If not found, check if you pasted a link in NEON_DB_URL.
+# If neither exists, fall back to a local 'users.db' file.
+database_url = os.environ.get('DATABASE_URL')
+if not database_url and "postgres" in NEON_DB_URL:
+    database_url = NEON_DB_URL
+if not database_url:
+    database_url = 'sqlite:///users.db'
 
 # Fix for Render/Neon using 'postgres://' (SQLAlchemy needs 'postgresql://')
 if database_url and database_url.startswith("postgres://"):
@@ -27,16 +30,13 @@ if database_url and database_url.startswith("postgres://"):
 
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# 2. SECURITY KEY
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev_secret_key_12345')
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev_key_123')
 
 db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# 3. API KEY
 SERP_API_KEY = os.environ.get("SERP_API_KEY")
 
 # --- DATABASE MODELS ---
@@ -45,16 +45,16 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(150), unique=True, nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(150), nullable=False)
-    # Relationship to history
     history = db.relationship('SearchHistory', backref='user', lazy=True)
 
 class SearchHistory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    # FIX: Renamed 'query' to 'search_query' to prevent the AttributeError crash
     search_query = db.Column(db.String(200), nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
-# Create Database Tables automatically
+# Create Tables
 with app.app_context():
     db.create_all()
 
@@ -89,20 +89,19 @@ def login():
     if request.method == "POST":
         action = request.form.get('action')
         
-        # --- REGISTER LOGIC ---
+        # REGISTER
         if action == 'register':
             username = request.form.get('username')
             email = request.form.get('email')
             password = request.form.get('password')
             
-            # Check if User exists to prevent crash
             user_email = User.query.filter_by(email=email).first()
             user_name = User.query.filter_by(username=username).first()
 
             if user_email:
                 flash('Email already exists.', 'error')
             elif user_name:
-                flash('Username already exists. Please choose another.', 'error')
+                flash('Username already exists.', 'error')
             else:
                 hashed_pw = generate_password_hash(password, method='pbkdf2:sha256')
                 new_user = User(username=username, email=email, password=hashed_pw)
@@ -111,7 +110,7 @@ def login():
                 flash('Account created! Please sign in.', 'success')
                 return redirect(url_for('login'))
                 
-        # --- LOGIN LOGIC ---
+        # LOGIN
         elif action == 'login':
             username = request.form.get('username')
             password = request.form.get('password')
@@ -139,7 +138,7 @@ def index():
 @app.route("/account")
 @login_required
 def account():
-    # Fetch history for current user, newest first
+    # Fetch history using the new logic
     user_history = SearchHistory.query.filter_by(user_id=current_user.id).order_by(SearchHistory.timestamp.desc()).all()
     return render_template("account.html", user=current_user, history=user_history)
 
@@ -159,7 +158,7 @@ def update_profile():
         db.session.commit()
         flash('Profile updated successfully!', 'success')
     except:
-        flash('Error updating profile. Username or Email might be taken.', 'error')
+        flash('Error updating profile. Username taken.', 'error')
     
     return redirect(url_for('account'))
 
@@ -169,7 +168,7 @@ def search():
     product = request.form.get("product")
     sort_order = request.form.get("sort")
 
-    # Save History
+    # SAVE HISTORY (Updated to use 'search_query')
     if product:
         new_search = SearchHistory(user_id=current_user.id, search_query=product)
         db.session.add(new_search)
@@ -187,7 +186,7 @@ def search():
         response = requests.get("https://serpapi.com/search", params=params)
         data = response.json()
     except Exception as e:
-        print(f"Error fetching data: {e}")
+        print(f"Error: {e}")
         return render_template("index.html", error="Failed to fetch results", user=current_user)
 
     results = []
