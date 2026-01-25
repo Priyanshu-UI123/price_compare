@@ -14,12 +14,12 @@ app = Flask(__name__)
 SERP_API_KEY = "d66eccb121b3453152187f2442537b0fe5b3c82c4b8d4d56b89ed4d52c9f01a6"
 
 # --- 2. EMAIL CONFIGURATION (For Password Reset) ---
-# Use your Gmail and the 16-char App Password (NOT your real password)
+# Use your Gmail and the 16-char App Password
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'pupuhari123@gmail.com'  # Your Gmail address
-app.config['MAIL_PASSWORD'] = 'flfl rpac nsqz wprl'  # Your Gmail App Password
+app.config['MAIL_USERNAME'] = 'pupuhari123@gmail.com' 
+app.config['MAIL_PASSWORD'] = 'flfl rpac nsqz wprl' 
 
 # --- 3. DATABASE CONFIGURATION (Neon) ---
 NEON_DB_URL = "postgresql://neondb_owner:npg_d3OshXYJxvl6@ep-misty-hat-a1bla5w6.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require" 
@@ -89,19 +89,28 @@ def load_user(user_id):
 # --- HELPER FUNCTIONS ---
 def send_reset_email(user):
     token = user.get_reset_token()
-    msg = Message('Password Reset Request',
-                  sender=app.config['MAIL_USERNAME'],
-                  recipients=[user.email])
     
     # Create the link that brings them back to your site
     link = url_for('reset_token', token=token, _external=True)
+    
+    msg = Message('Password Reset Request',
+                  sender=app.config['MAIL_USERNAME'],
+                  recipients=[user.email])
     
     msg.body = f'''To reset your password, click the following link:
 {link}
 
 If you did not request this, please ignore this email.
 '''
-    mail.send(msg)
+    # --- SAFE SENDING BLOCK (Prevents Internal Server Error) ---
+    try:
+        mail.send(msg)
+    except Exception as e:
+        print(f"\n\n!!! EMAIL FAILED TO SEND !!!")
+        print(f"ERROR: {e}")
+        print("Check your App Password in app.py")
+        print(f"MANUAL LINK FOR TESTING: {link}\n\n")
+        # We don't crash, we just let the user know something went wrong in logs
 
 def get_logo(store):
     if not store: return "default.png"
@@ -173,15 +182,9 @@ def reset_request():
         email = request.form.get('email')
         user = User.query.filter_by(email=email).first()
         if user:
-            try:
-                send_reset_email(user)
-                flash('An email has been sent with instructions to reset your password.', 'success')
-            except Exception as e:
-                print(e)
-                flash('Error sending email. Check server logs.', 'error')
-        else:
-            # We show the same message for security reasons (so hackers can't guess emails)
-            flash('An email has been sent with instructions to reset your password.', 'success')
+            send_reset_email(user)
+        # Always show success to prevent email guessing
+        flash('If that email exists, a reset link has been sent.', 'success')
         return redirect(url_for('login'))
     return render_template('reset_request.html')
 
