@@ -10,28 +10,30 @@ from itsdangerous import URLSafeTimedSerializer as Serializer
 
 app = Flask(__name__)
 
-# --- CONFIGURATION ---
-
-# 1. SEARCH API
+# --- 1. SEARCH API CONFIGURATION ---
 SERP_API_KEY = "d66eccb121b3453152187f2442537b0fe5b3c82c4b8d4d56b89ed4d52c9f01a6"
 
-# 2. EMAIL CONFIGURATION (Required for Forgot Password)
-# Note: For Gmail, you must enable 2FA and create an 'App Password'
+# --- 2. EMAIL CONFIGURATION (For Password Reset) ---
+# Use your Gmail and the 16-char App Password (NOT your real password)
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'your_email@gmail.com'  # <--- PUT YOUR EMAIL HERE
-app.config['MAIL_PASSWORD'] = 'your_app_password'     # <--- PUT YOUR APP PASSWORD HERE
+app.config['MAIL_USERNAME'] = 'pupuhari123@gmail.com'  # Your Gmail address
+app.config['MAIL_PASSWORD'] = 'flfl rpac nsqz wprl'  # Your Gmail App Password
 
-# 3. DATABASE CONFIGURATION
+# --- 3. DATABASE CONFIGURATION (Neon) ---
 NEON_DB_URL = "postgresql://neondb_owner:npg_d3OshXYJxvl6@ep-misty-hat-a1bla5w6.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require" 
 
+
+# --- DATABASE CONNECTION LOGIC ---
 database_url = os.environ.get('DATABASE_URL')
+
 if not database_url and "neon" in NEON_DB_URL:
     database_url = NEON_DB_URL
 elif not database_url:
     database_url = 'sqlite:///users.db'
 
+# Fix for Render/Neon using 'postgres://' instead of 'postgresql://'
 if database_url and database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql://", 1)
 
@@ -40,7 +42,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev_key_123')
 
 db = SQLAlchemy(app)
-mail = Mail(app)  # Initialize Mail
+mail = Mail(app)  # Initialize Flask-Mail
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
@@ -53,12 +55,12 @@ class User(UserMixin, db.Model):
     password = db.Column(db.String(150), nullable=False)
     history = db.relationship('SearchHistory', backref='user', lazy=True)
 
-    # Generate a secure token that expires in 1800 seconds (30 mins)
+    # Generate a secure token that lasts for 30 minutes (1800 seconds)
     def get_reset_token(self):
         s = Serializer(app.config['SECRET_KEY'])
         return s.dumps({'user_id': self.id})
 
-    # Verify the token and return the user
+    # Verify the token
     @staticmethod
     def verify_reset_token(token, expires_sec=1800):
         s = Serializer(app.config['SECRET_KEY'])
@@ -69,12 +71,14 @@ class User(UserMixin, db.Model):
         return User.query.get(user_id)
 
 class SearchHistory(db.Model):
+    # Using 'v2' to ensure a fresh, clean table is created
     __tablename__ = 'search_history_v2' 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     search_query = db.Column(db.String(200), nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
+# Create Tables automatically
 with app.app_context():
     db.create_all()
 
@@ -86,16 +90,16 @@ def load_user(user_id):
 def send_reset_email(user):
     token = user.get_reset_token()
     msg = Message('Password Reset Request',
-                  sender='noreply@futureshop.com',
+                  sender=app.config['MAIL_USERNAME'],
                   recipients=[user.email])
     
-    # We create the link dynamically
+    # Create the link that brings them back to your site
     link = url_for('reset_token', token=token, _external=True)
     
-    msg.body = f'''To reset your password, visit the following link:
+    msg.body = f'''To reset your password, click the following link:
 {link}
 
-If you did not make this request then simply ignore this email and no changes will be made.
+If you did not request this, please ignore this email.
 '''
     mail.send(msg)
 
@@ -125,6 +129,7 @@ def login():
     if request.method == "POST":
         action = request.form.get('action')
         
+        # REGISTER
         if action == 'register':
             username = request.form.get('username')
             email = request.form.get('email')
@@ -145,6 +150,7 @@ def login():
                 flash('Account created! Please sign in.', 'success')
                 return redirect(url_for('login'))
                 
+        # LOGIN
         elif action == 'login':
             username = request.form.get('username')
             password = request.form.get('password')
@@ -158,7 +164,7 @@ def login():
 
     return render_template("login.html")
 
-# --- NEW: PASSWORD RESET REQUEST ROUTE ---
+# --- FORGOT PASSWORD ROUTES ---
 @app.route("/reset_password", methods=['GET', 'POST'])
 def reset_request():
     if current_user.is_authenticated:
@@ -167,13 +173,18 @@ def reset_request():
         email = request.form.get('email')
         user = User.query.filter_by(email=email).first()
         if user:
-            send_reset_email(user)
-        # We flash success regardless of whether the email exists for security
-        flash('If an account with that email exists, an email has been sent with instructions to reset your password.', 'success')
+            try:
+                send_reset_email(user)
+                flash('An email has been sent with instructions to reset your password.', 'success')
+            except Exception as e:
+                print(e)
+                flash('Error sending email. Check server logs.', 'error')
+        else:
+            # We show the same message for security reasons (so hackers can't guess emails)
+            flash('An email has been sent with instructions to reset your password.', 'success')
         return redirect(url_for('login'))
     return render_template('reset_request.html')
 
-# --- NEW: PASSWORD RESET TOKEN ROUTE ---
 @app.route("/reset_password/<token>", methods=['GET', 'POST'])
 def reset_token(token):
     if current_user.is_authenticated:
@@ -181,7 +192,7 @@ def reset_token(token):
     
     user = User.verify_reset_token(token)
     if not user:
-        flash('That is an invalid or expired token', 'error')
+        flash('That is an invalid or expired token.', 'error')
         return redirect(url_for('reset_request'))
     
     if request.method == 'POST':
@@ -189,7 +200,7 @@ def reset_token(token):
         hashed_pw = generate_password_hash(password, method='pbkdf2:sha256')
         user.password = hashed_pw
         db.session.commit()
-        flash('Your password has been updated! You are now able to log in', 'success')
+        flash('Your password has been updated! You can now log in.', 'success')
         return redirect(url_for('login'))
         
     return render_template('reset_token.html')
@@ -237,6 +248,7 @@ def search():
     product = request.form.get("product")
     sort_order = request.form.get("sort")
 
+    # SAVE HISTORY
     if product:
         new_search = SearchHistory(user_id=current_user.id, search_query=product)
         db.session.add(new_search)
@@ -264,6 +276,7 @@ def search():
         store = item.get("source", "Unknown")
         price = item.get("price", "N/A")
         link = item.get("link")
+        
         if not link: link = item.get("product_link")
         if link and link.startswith("/"): link = f"https://www.google.co.in{link}"
 
