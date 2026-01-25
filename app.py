@@ -5,37 +5,21 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
-from flask_mail import Mail, Message
 from itsdangerous import URLSafeTimedSerializer as Serializer
-import traceback
 
 app = Flask(__name__)
 
-# --- 1. SEARCH API CONFIGURATION ---
+# --- 1. CREDENTIALS ---
 SERP_API_KEY = "d66eccb121b3453152187f2442537b0fe5b3c82c4b8d4d56b89ed4d52c9f01a6"
+NEON_DB_URL = "postgresql://neondb_owner:npg_d3OshXYJxvl6@ep-misty-hat-a1bla5w6.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
 
-# --- 2. EMAIL CONFIGURATION (For Password Reset) ---
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'pupuhari123@gmail.com'
-# We remove spaces from the app password to ensure it works correctly
-app.config['MAIL_PASSWORD'] = 'flfl rpac nsqz wprl'.replace(" ", "")
-
-# --- 3. DATABASE CONFIGURATION (Neon) ---
-NEON_DB_URL = "postgresql://neondb_owner:npg_d3OshXYJxvl6@ep-misty-hat-a1bla5w6.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
-
-
-# --- DATABASE CONNECTION LOGIC ---
+# --- DATABASE SETUP ---
 database_url = os.environ.get('DATABASE_URL')
-
-# Priority: Render DB -> Neon DB -> Local SQLite
 if not database_url and "neon" in NEON_DB_URL:
     database_url = NEON_DB_URL
 elif not database_url:
     database_url = 'sqlite:///users.db'
 
-# Fix for SQLAlchemy requiring 'postgresql://' instead of 'postgres://'
 if database_url and database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql://", 1)
 
@@ -44,12 +28,11 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev_key_123')
 
 db = SQLAlchemy(app)
-mail = Mail(app)  # Initialize Flask-Mail
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# --- DATABASE MODELS ---
+# --- MODELS ---
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
@@ -57,12 +40,10 @@ class User(UserMixin, db.Model):
     password = db.Column(db.String(150), nullable=False)
     history = db.relationship('SearchHistory', backref='user', lazy=True)
 
-    # Generate a secure token that lasts for 30 minutes (1800 seconds)
     def get_reset_token(self):
         s = Serializer(app.config['SECRET_KEY'])
         return s.dumps({'user_id': self.id})
 
-    # Verify the token
     @staticmethod
     def verify_reset_token(token, expires_sec=1800):
         s = Serializer(app.config['SECRET_KEY'])
@@ -73,14 +54,12 @@ class User(UserMixin, db.Model):
         return User.query.get(user_id)
 
 class SearchHistory(db.Model):
-    # Using 'v2' to ensure a fresh, clean table is created
     __tablename__ = 'search_history_v2' 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     search_query = db.Column(db.String(200), nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
-# Create Tables automatically
 with app.app_context():
     db.create_all()
 
@@ -89,31 +68,6 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 # --- HELPER FUNCTIONS ---
-def send_reset_email(user):
-    token = user.get_reset_token()
-    
-    # Create the link that brings them back to your site
-    link = url_for('reset_token', token=token, _external=True)
-    
-    msg = Message('Password Reset Request',
-                  sender=app.config['MAIL_USERNAME'],
-                  recipients=[user.email])
-    
-    msg.body = f'''To reset your password, click the following link:
-{link}
-
-If you did not request this, please ignore this email.
-'''
-    # --- SAFE SENDING BLOCK (Prevents Internal Server Error) ---
-    try:
-        mail.send(msg)
-        print(f"Email sent successfully to {user.email}")
-    except Exception as e:
-        print(f"\n\n!!! EMAIL FAILED TO SEND !!!")
-        print(f"ERROR: {e}")
-        print(f"MANUAL LINK FOR TESTING (Copy this if email fails): {link}\n\n")
-        # We don't crash, we just let the user know something went wrong in logs
-
 def get_logo(store):
     if not store: return "default.png"
     s = store.lower()
@@ -140,28 +94,23 @@ def login():
     if request.method == "POST":
         action = request.form.get('action')
         
-        # REGISTER
         if action == 'register':
             username = request.form.get('username')
             email = request.form.get('email')
             password = request.form.get('password')
             
             user_email = User.query.filter_by(email=email).first()
-            user_name = User.query.filter_by(username=username).first()
-
             if user_email:
                 flash('Email already exists.', 'error')
-            elif user_name:
-                flash('Username already exists.', 'error')
-            else:
-                hashed_pw = generate_password_hash(password, method='pbkdf2:sha256')
-                new_user = User(username=username, email=email, password=hashed_pw)
-                db.session.add(new_user)
-                db.session.commit()
-                flash('Account created! Please sign in.', 'success')
                 return redirect(url_for('login'))
+
+            hashed_pw = generate_password_hash(password, method='pbkdf2:sha256')
+            new_user = User(username=username, email=email, password=hashed_pw)
+            db.session.add(new_user)
+            db.session.commit()
+            flash('Account created! Please sign in.', 'success')
+            return redirect(url_for('login'))
                 
-        # LOGIN
         elif action == 'login':
             username = request.form.get('username')
             password = request.form.get('password')
@@ -175,29 +124,26 @@ def login():
 
     return render_template("login.html")
 
-# --- FORGOT PASSWORD ROUTES ---
+# --- SIMULATION MODE RESET ROUTE ---
 @app.route("/reset_password", methods=['GET', 'POST'])
 def reset_request():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
         
     if request.method == 'POST':
-        try:
-            email = request.form.get('email')
-            user = User.query.filter_by(email=email).first()
-            if user:
-                send_reset_email(user)
-                flash('An email has been sent with instructions to reset your password.', 'success')
-            else:
-                # We show the same message for security reasons
-                flash('If that email exists, a reset link has been sent.', 'success')
-            return redirect(url_for('login'))
+        email = request.form.get('email')
+        user = User.query.filter_by(email=email).first()
+        
+        if user:
+            # Generate the secure link
+            token = user.get_reset_token()
+            reset_link = url_for('reset_token', token=token, _external=True)
             
-        except Exception as e:
-            # If something crashes, we catch it here
-            print(f"CRITICAL ERROR in reset_request: {e}")
-            flash('An error occurred. Please check server logs.', 'error')
-            return redirect(url_for('login'))
+            # SIMULATION: Instead of emailing, we send the link to the template
+            flash(f'SIMULATION MODE: Email system bypassed.', 'success')
+            return render_template('reset_request.html', simulation_link=reset_link)
+        else:
+            flash('If that email exists, a reset link has been sent.', 'success')
             
     return render_template('reset_request.html')
 
@@ -254,7 +200,7 @@ def update_profile():
         db.session.commit()
         flash('Profile updated successfully!', 'success')
     except:
-        flash('Error updating profile. Username taken.', 'error')
+        flash('Error updating profile.', 'error')
     
     return redirect(url_for('account'))
 
@@ -264,7 +210,6 @@ def search():
     product = request.form.get("product")
     sort_order = request.form.get("sort")
 
-    # SAVE HISTORY
     if product:
         new_search = SearchHistory(user_id=current_user.id, search_query=product)
         db.session.add(new_search)
@@ -292,7 +237,6 @@ def search():
         store = item.get("source", "Unknown")
         price = item.get("price", "N/A")
         link = item.get("link")
-        
         if not link: link = item.get("product_link")
         if link and link.startswith("/"): link = f"https://www.google.co.in{link}"
 
@@ -307,7 +251,6 @@ def search():
         })
 
     results.sort(key=lambda x: x["price_value"], reverse=(sort_order == "high"))
-
     return render_template("results.html", product=product, results=results, sort_order=sort_order, user=current_user)
 
 if __name__ == "__main__":
