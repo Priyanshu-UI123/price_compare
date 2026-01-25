@@ -36,8 +36,8 @@
     <div class="wrapper">
         <h2>Hello, {{ user.username }}!</h2>
         <p>What are you looking for today?</p>
-        <form action="/search" method="POST">
-            <div class="input-box"><span class="icon"><ion-icon name="search"></ion-icon></span><input type="text" name="product" placeholder="Enter product name..." required autocomplete="off"></div>
+        <form action="/search" method="GET">
+            <div class="input-box"><span class="icon"><ion-icon name="search"></ion-icon></span><input type="text" name="q" placeholder="Enter product name..." required autocomplete="off"></div>
             <div class="btn-group">
                 <button type="submit" class="search-btn">Search</button>
                 <a href="/account" style="flex: 1;"><button type="button" class="history-btn">History</button></a>

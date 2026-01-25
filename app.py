@@ -25,7 +25,7 @@ NEON_DB_URL = "postgresql://neondb_owner:npg_d3OshXYJxvl6@ep-misty-hat-a1bla5w6.
 
 database_url = os.environ.get('DATABASE_URL')
 if not database_url:
-    database_url = NEON_DB_URL # Use Neon by default even locally
+    database_url = NEON_DB_URL 
 
 if database_url and database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql://", 1)
@@ -93,7 +93,7 @@ def send_reset_email(user):
     try:
         mail.send(msg)
     except Exception as e:
-        print(f"Email Error: {e}") # Don't crash app if email fails
+        print(f"Email Error: {e}")
 
 def extract_price(p):
     if not p: return 0
@@ -185,6 +185,7 @@ def update_profile():
     flash('Profile updated!', 'success')
     return redirect(url_for('account'))
 
+# --- WISHLIST ROUTES ---
 @app.route("/wishlist")
 @login_required
 def wishlist():
@@ -195,7 +196,11 @@ def wishlist():
 @login_required
 def add_to_wishlist():
     link = request.form.get("link")
-    if not Wishlist.query.filter_by(user_id=current_user.id, link=link).first():
+    exists = Wishlist.query.filter_by(user_id=current_user.id, link=link).first()
+    
+    if exists:
+        flash('Item is already in your wishlist!', 'info')
+    else:
         new_item = Wishlist(
             user_id=current_user.id, 
             title=request.form.get("title"), 
@@ -207,8 +212,7 @@ def add_to_wishlist():
         db.session.add(new_item)
         db.session.commit()
         flash('Added to Wishlist!', 'success')
-    else:
-        flash('Already in Wishlist.', 'info')
+        
     return redirect(request.referrer)
 
 @app.route("/remove_wishlist/<int:id>")
@@ -221,15 +225,24 @@ def remove_wishlist(id):
         flash('Removed from Wishlist.', 'success')
     return redirect(url_for('wishlist'))
 
-@app.route("/search", methods=["POST"])
+# --- SEARCH ROUTE (GET & POST) ---
+@app.route("/search", methods=["GET", "POST"])
 @login_required
 def search():
-    product = request.form.get("product")
-    sort_order = request.form.get("sort")
+    # Accept product from both GET (URL) and POST (Form)
+    product = request.args.get("q") or request.form.get("product")
+    sort_order = request.args.get("sort")
     
-    if product:
-        db.session.add(SearchHistory(user_id=current_user.id, search_query=product))
-        db.session.commit()
+    if not product:
+        return redirect(url_for('index'))
+
+    # Save History (Avoid saving simple sort actions if possible, but keeping it simple here)
+    if request.method == "POST" or (request.args.get("q") and not request.args.get("sort")):
+         # Check duplicate
+        last = SearchHistory.query.filter_by(user_id=current_user.id).order_by(SearchHistory.timestamp.desc()).first()
+        if not last or last.search_query != product:
+            db.session.add(SearchHistory(user_id=current_user.id, search_query=product))
+            db.session.commit()
 
     try:
         params = {"engine": "google_shopping", "q": product, "hl": "en", "gl": "in", "api_key": SERP_API_KEY}
@@ -248,12 +261,14 @@ def search():
                 "thumbnail": item.get("thumbnail")
             })
         
-        if sort_order:
-            results.sort(key=lambda x: x["price_value"], reverse=(sort_order == "high"))
+        if sort_order == 'low':
+            results.sort(key=lambda x: x["price_value"])
+        elif sort_order == 'high':
+            results.sort(key=lambda x: x["price_value"], reverse=True)
             
         return render_template("results.html", product=product, results=results, sort_order=sort_order)
     except Exception as e:
-        print(e)
+        print(f"Search Error: {e}")
         return render_template("index.html", error="Search failed")
 
 if __name__ == "__main__":
