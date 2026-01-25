@@ -10,21 +10,20 @@ app = Flask(__name__)
 
 # --- CONFIGURATION ---
 
-# 1. PASTE YOUR SERPAPI KEY HERE 👇 (Crucial for search results!)
+# 1. PASTE YOUR SERPAPI KEY HERE 👇
 SERP_API_KEY = "d66eccb121b3453152187f2442537b0fe5b3c82c4b8d4d56b89ed4d52c9f01a6"
 
-# 2. PASTE YOUR NEON DATABASE LINK HERE 👇 (Crucial for saving users!)
+# 2. PASTE YOUR NEON DATABASE LINK HERE 👇
 # Example: "postgresql://neondb_owner:AbCd@ep-cool-frog.us-east-2.aws.neon.tech/neondb?sslmode=require"
 NEON_DB_URL = "postgresql://neondb_owner:npg_d3OshXYJxvl6@ep-misty-hat-a1bla5w6.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require" 
 
 
-# --- DATABASE SETUP LOGIC ---
+# --- DATABASE CONNECTION LOGIC ---
 # First, look for Render's built-in DATABASE_URL. 
-# If not found, check if you pasted a link in NEON_DB_URL.
+# If not found, use the NEON_DB_URL you pasted above.
 # If neither exists, fall back to a local 'users.db' file.
 database_url = os.environ.get('DATABASE_URL')
 
-# If Render didn't provide a DB, use the one you pasted above
 if not database_url and "neon" in NEON_DB_URL:
     database_url = NEON_DB_URL
 elif not database_url:
@@ -52,13 +51,16 @@ class User(UserMixin, db.Model):
     history = db.relationship('SearchHistory', backref='user', lazy=True)
 
 class SearchHistory(db.Model):
+    # --- THE FIX: We rename the table to force a fresh start ---
+    __tablename__ = 'search_history_v2' 
+    
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    # Renamed to 'search_query' to prevent crashes with Flask-SQLAlchemy
+    # Using 'search_query' to avoid conflicts
     search_query = db.Column(db.String(200), nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
-# Create Tables
+# Create Tables automatically if they don't exist
 with app.app_context():
     db.create_all()
 
@@ -142,7 +144,7 @@ def index():
 @app.route("/account")
 @login_required
 def account():
-    # Fetch history using the safe column name 'search_query'
+    # Fetch history using the new table logic
     user_history = SearchHistory.query.filter_by(user_id=current_user.id).order_by(SearchHistory.timestamp.desc()).all()
     return render_template("account.html", user=current_user, history=user_history)
 
@@ -172,7 +174,7 @@ def search():
     product = request.form.get("product")
     sort_order = request.form.get("sort")
 
-    # SAVE HISTORY (using 'search_query' column)
+    # SAVE HISTORY (using 'search_query')
     if product:
         new_search = SearchHistory(user_id=current_user.id, search_query=product)
         db.session.add(new_search)
