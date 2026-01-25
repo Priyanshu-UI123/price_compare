@@ -17,7 +17,7 @@
 
         :root {
             --bg-color: #1f242d;   /* Portfolio Dark Background */
-            --second-bg: #323946;  /* Slightly lighter for contrast */
+            --second-bg: #323946;  
             --main-color: #0ef;    /* Portfolio Neon Cyan */
             --text-color: #fff;
         }
@@ -25,18 +25,28 @@
         body {
             display: flex; justify-content: center; align-items: center;
             min-height: 100vh; 
-            background: var(--bg-color); /* The specific dark color from the link */
+            background: var(--bg-color); 
             color: var(--text-color);
             overflow: hidden;
+            position: relative;
         }
 
-        /* Glassmorphism Card (Adjusted for Dark Theme) */
+        /* --- CANVAS FOR GEOMETRIC LINES --- */
+        #bg-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: -1; /* Behind everything */
+        }
+
+        /* --- GLASS CARD --- */
         .wrapper {
             position: relative; width: 400px; min-height: 480px;
-            background: var(--second-bg); /* Matches portfolio card style */
-            border: 2px solid rgba(0, 238, 255, 0.1); /* Subtle Cyan Border */
+            background: rgba(31, 36, 45, 0.7); /* Darker glass */
+            border: 2px solid rgba(0, 238, 255, 0.1); 
             border-radius: 20px;
-            box-shadow: 0 0 25px rgba(0, 0, 0, 0.5); /* Strong shadow for depth */
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
             display: flex; justify-content: center; align-items: center;
             overflow: hidden; transition: height 0.3s ease;
         }
@@ -45,35 +55,22 @@
         
         h2 { 
             font-size: 2em; color: var(--text-color); text-align: center; margin-bottom: 25px; 
-            text-shadow: 0 0 10px rgba(0, 238, 255, 0.3); /* Subtle text glow */
+            text-shadow: 0 0 10px rgba(0, 238, 255, 0.3);
         }
 
         /* Input Styles */
         .input-box { position: relative; width: 100%; height: 50px; border-bottom: 2px solid var(--text-color); margin: 30px 0; }
+        .input-box label { position: absolute; top: 50%; left: 5px; transform: translateY(-50%); font-size: 1em; color: var(--text-color); pointer-events: none; transition: .5s; }
         
-        .input-box label { 
-            position: absolute; top: 50%; left: 5px; transform: translateY(-50%); 
-            font-size: 1em; color: var(--text-color); pointer-events: none; transition: .5s; 
-        }
-        
-        /* Focus Animation */
         .input-box input:focus ~ label, .input-box input:valid ~ label { 
             top: -5px; color: var(--main-color); text-shadow: 0 0 5px var(--main-color);
         }
-        
         .input-box input:focus ~ .icon, .input-box input:valid ~ .icon {
             color: var(--main-color);
         }
 
-        .input-box input { 
-            width: 100%; height: 100%; background: transparent; border: none; outline: none; 
-            font-size: 1em; color: var(--text-color); padding: 0 35px 0 5px; 
-        }
-        
-        .input-box .icon { 
-            position: absolute; right: 8px; font-size: 1.2em; color: var(--text-color); 
-            line-height: 57px; transition: 0.5s;
-        }
+        .input-box input { width: 100%; height: 100%; background: transparent; border: none; outline: none; font-size: 1em; color: var(--text-color); padding: 0 35px 0 5px; }
+        .input-box .icon { position: absolute; right: 8px; font-size: 1.2em; color: var(--text-color); line-height: 57px; transition: 0.5s; }
 
         /* Buttons & Links */
         button { 
@@ -81,11 +78,7 @@
             border-radius: 40px; cursor: pointer; font-size: 1em; color: #1f242d; 
             font-weight: 600; transition: 0.3s; box-shadow: 0 0 10px var(--main-color);
         }
-        
-        button:hover { 
-            box-shadow: 0 0 20px var(--main-color), 0 0 40px var(--main-color); 
-            transform: scale(1.02);
-        }
+        button:hover { box-shadow: 0 0 20px var(--main-color), 0 0 40px var(--main-color); transform: scale(1.02); }
         
         .register-link, .login-register { font-size: .9em; color: var(--text-color); text-align: center; margin: 25px 0 10px; }
         .register-link a, .login-register a { color: var(--text-color); text-decoration: none; font-weight: 600; transition: 0.3s; }
@@ -106,6 +99,8 @@
     </style>
 </head>
 <body>
+
+    <canvas id="bg-canvas"></canvas>
 
     <div class="flash-container">
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -187,7 +182,84 @@
     </div>
 
     <script>
-        // --- ANIMATIONS ---
+        // --- 1. GEOMETRIC LINES ANIMATION (CANVAS) ---
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+
+        let particles = [];
+        const particleCount = 100; // Number of dots
+        const connectionDistance = 150; // How close dots need to be to connect
+
+        // Resize Canvas
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Particle Class
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 1.5; // Speed X
+                this.vy = (Math.random() - 0.5) * 1.5; // Speed Y
+                this.size = Math.random() * 2 + 1;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Bounce off edges
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = '#0ef'; // Neon Cyan Dots
+                ctx.fill();
+            }
+        }
+
+        // Initialize Particles
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+
+        // Animation Loop
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+
+                // Draw Lines
+                for (let j = i; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < connectionDistance) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(0, 238, 255, ${1 - distance / connectionDistance})`; // Fading Cyan Lines
+                        ctx.lineWidth = 1;
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+
+        // --- 2. FORM SWITCHING ANIMATIONS (GSAP) ---
         document.addEventListener("DOMContentLoaded", () => {
             const wrapper = document.querySelector('.wrapper');
             const loginBox = document.querySelector('.form-box.login');
@@ -195,7 +267,7 @@
             const registerBtn = document.querySelector('.register-btn');
             const loginBtn = document.querySelector('.login-btn');
 
-            // Float In Animation (Slightly slower for premium feel)
+            // Float In Animation
             gsap.from(".wrapper", { duration: 1.2, y: 50, opacity: 0, ease: "power3.out" });
 
             // Switch to Register
