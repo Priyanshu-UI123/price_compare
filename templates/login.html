@@ -15,63 +15,97 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
 
+        :root {
+            --bg-color: #1f242d;   /* Portfolio Dark Background */
+            --second-bg: #323946;  /* Slightly lighter for contrast */
+            --main-color: #0ef;    /* Portfolio Neon Cyan */
+            --text-color: #fff;
+        }
+
         body {
             display: flex; justify-content: center; align-items: center;
-            min-height: 100vh; overflow: hidden; color: white;
-            background: #000; /* Fallback color */
+            min-height: 100vh; 
+            background: var(--bg-color); /* The specific dark color from the link */
+            color: var(--text-color);
+            overflow: hidden;
         }
 
-        /* --- VIDEO BACKGROUND --- */
-        #bg-video {
-            position: fixed; right: 0; bottom: 0;
-            min-width: 100%; min-height: 100%;
-            z-index: -1; /* Puts video BEHIND everything */
-            object-fit: cover; /* Ensures it covers the screen */
-            filter: brightness(0.6); /* Darkens video so text is readable */
-        }
-
-        /* Glassmorphism Card */
+        /* Glassmorphism Card (Adjusted for Dark Theme) */
         .wrapper {
-            position: relative; width: 400px; min-height: 500px;
-            background: rgba(255, 255, 255, 0.05); /* Slight transparency */
-            border: 2px solid rgba(255, 255, 255, 0.1);
+            position: relative; width: 400px; min-height: 480px;
+            background: var(--second-bg); /* Matches portfolio card style */
+            border: 2px solid rgba(0, 238, 255, 0.1); /* Subtle Cyan Border */
             border-radius: 20px;
-            backdrop-filter: blur(15px); /* Blurs the video behind the card */
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.5); /* Strong shadow for depth */
             display: flex; justify-content: center; align-items: center;
             overflow: hidden; transition: height 0.3s ease;
         }
 
         .form-box { width: 100%; padding: 40px; display: flex; flex-direction: column; }
-        h2 { font-size: 2em; color: #fff; text-align: center; margin-bottom: 30px; }
+        
+        h2 { 
+            font-size: 2em; color: var(--text-color); text-align: center; margin-bottom: 25px; 
+            text-shadow: 0 0 10px rgba(0, 238, 255, 0.3); /* Subtle text glow */
+        }
 
         /* Input Styles */
-        .input-box { position: relative; width: 100%; height: 50px; border-bottom: 2px solid #fff; margin: 30px 0; }
-        .input-box label { position: absolute; top: 50%; left: 5px; transform: translateY(-50%); font-size: 1em; color: #fff; pointer-events: none; transition: .5s; }
-        .input-box input:focus ~ label, .input-box input:valid ~ label { top: -5px; color: #38bdf8; }
-        .input-box input { width: 100%; height: 100%; background: transparent; border: none; outline: none; font-size: 1em; color: #fff; padding: 0 35px 0 5px; }
-        .input-box .icon { position: absolute; right: 8px; font-size: 1.2em; color: #fff; line-height: 57px; }
+        .input-box { position: relative; width: 100%; height: 50px; border-bottom: 2px solid var(--text-color); margin: 30px 0; }
+        
+        .input-box label { 
+            position: absolute; top: 50%; left: 5px; transform: translateY(-50%); 
+            font-size: 1em; color: var(--text-color); pointer-events: none; transition: .5s; 
+        }
+        
+        /* Focus Animation */
+        .input-box input:focus ~ label, .input-box input:valid ~ label { 
+            top: -5px; color: var(--main-color); text-shadow: 0 0 5px var(--main-color);
+        }
+        
+        .input-box input:focus ~ .icon, .input-box input:valid ~ .icon {
+            color: var(--main-color);
+        }
+
+        .input-box input { 
+            width: 100%; height: 100%; background: transparent; border: none; outline: none; 
+            font-size: 1em; color: var(--text-color); padding: 0 35px 0 5px; 
+        }
+        
+        .input-box .icon { 
+            position: absolute; right: 8px; font-size: 1.2em; color: var(--text-color); 
+            line-height: 57px; transition: 0.5s;
+        }
 
         /* Buttons & Links */
-        button { width: 100%; height: 45px; background: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 1em; color: #333; font-weight: 600; transition: 0.3s; }
-        button:hover { background: #38bdf8; color: #fff; box-shadow: 0 0 20px rgba(56, 189, 248, 0.6); }
-        .register-link, .login-register { font-size: .9em; color: #fff; text-align: center; margin: 25px 0 10px; }
-        .register-link a, .login-register a { color: #fff; text-decoration: none; font-weight: 600; }
-        .register-link a:hover, .login-register a:hover { text-decoration: underline; color: #38bdf8; }
+        button { 
+            width: 100%; height: 45px; background: var(--main-color); border: none; 
+            border-radius: 40px; cursor: pointer; font-size: 1em; color: #1f242d; 
+            font-weight: 600; transition: 0.3s; box-shadow: 0 0 10px var(--main-color);
+        }
+        
+        button:hover { 
+            box-shadow: 0 0 20px var(--main-color), 0 0 40px var(--main-color); 
+            transform: scale(1.02);
+        }
+        
+        .register-link, .login-register { font-size: .9em; color: var(--text-color); text-align: center; margin: 25px 0 10px; }
+        .register-link a, .login-register a { color: var(--text-color); text-decoration: none; font-weight: 600; transition: 0.3s; }
+        .register-link a:hover, .login-register a:hover { color: var(--main-color); text-shadow: 0 0 5px var(--main-color); }
+        
         .remember-forgot { display: flex; justify-content: space-between; font-size: 0.9em; margin-bottom: 15px; }
-        .remember-forgot a { color: white; text-decoration: none; }
-        .remember-forgot a:hover { text-decoration: underline; }
+        .remember-forgot a { color: var(--text-color); text-decoration: none; transition: 0.3s; }
+        .remember-forgot a:hover { color: var(--main-color); }
+        .remember-forgot label input { accent-color: var(--main-color); margin-right: 3px; }
 
         /* Flash Messages */
         .flash-container { position: absolute; top: 10px; width: 100%; display: flex; justify-content: center; z-index: 100; }
-        .flash { padding: 10px 20px; border-radius: 8px; background: rgba(0, 0, 0, 0.6); color: white; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.3); }
+        .flash { 
+            padding: 10px 20px; border-radius: 8px; background: rgba(31, 36, 45, 0.9); 
+            color: var(--main-color); margin-bottom: 10px; border: 1px solid var(--main-color); 
+            box-shadow: 0 0 10px rgba(0, 238, 255, 0.2);
+        }
     </style>
 </head>
 <body>
-
-    <video autoplay muted loop id="bg-video">
-        <source src="{{ url_for('static', filename='bg-video.mp4') }}" type="video/mp4">
-    </video>
 
     <div class="flash-container">
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -161,22 +195,22 @@
             const registerBtn = document.querySelector('.register-btn');
             const loginBtn = document.querySelector('.login-btn');
 
-            // Float In Animation
-            gsap.from(".wrapper", { duration: 1.5, y: 100, opacity: 0, ease: "power4.out" });
+            // Float In Animation (Slightly slower for premium feel)
+            gsap.from(".wrapper", { duration: 1.2, y: 50, opacity: 0, ease: "power3.out" });
 
             // Switch to Register
             registerBtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                gsap.to(loginBox, { duration: 0.5, x: -50, opacity: 0, display: 'none', onComplete: () => {
-                    gsap.fromTo(registerBox, { x: 50, opacity: 0, display: 'flex' }, { x: 0, opacity: 1, duration: 0.5 });
+                gsap.to(loginBox, { duration: 0.4, x: -50, opacity: 0, display: 'none', onComplete: () => {
+                    gsap.fromTo(registerBox, { x: 50, opacity: 0, display: 'flex' }, { x: 0, opacity: 1, duration: 0.4 });
                 }});
             });
 
             // Switch to Login
             loginBtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                gsap.to(registerBox, { duration: 0.5, x: 50, opacity: 0, display: 'none', onComplete: () => {
-                    gsap.fromTo(loginBox, { x: -50, opacity: 0, display: 'flex' }, { x: 0, opacity: 1, duration: 0.5 });
+                gsap.to(registerBox, { duration: 0.4, x: 50, opacity: 0, display: 'none', onComplete: () => {
+                    gsap.fromTo(loginBox, { x: -50, opacity: 0, display: 'flex' }, { x: 0, opacity: 1, duration: 0.4 });
                 }});
             });
         });
