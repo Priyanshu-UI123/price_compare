@@ -3,53 +3,216 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Future Shop</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Future Access | Login</title>
+    
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <style>
+        /* --- CSS STYLES (Paste this directly in head) --- */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #0f172a; /* Dark Navy Background */
+            overflow: hidden;
+            color: white;
+        }
+
+        /* Animated Background Blobs */
+        .background-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            overflow: hidden; z-index: -1;
+        }
+
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.6;
+            animation: float 10s infinite alternate;
+        }
+        .blob-1 { top: -10%; left: -10%; width: 500px; height: 500px; background: #7c3aed; }
+        .blob-2 { bottom: -10%; right: -10%; width: 400px; height: 400px; background: #2563eb; animation-delay: -5s; }
+        .blob-3 { top: 40%; left: 40%; width: 300px; height: 300px; background: #db2777; animation-duration: 15s; }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(30px, -30px) scale(1.1); }
+        }
+
+        /* Glassmorphism Card */
+        .wrapper {
+            position: relative;
+            width: 400px;
+            min-height: 500px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            transition: height 0.3s ease;
+        }
+
+        .form-box {
+            width: 100%;
+            padding: 40px;
+            display: flex; /* Ensure content is visible */
+            flex-direction: column;
+        }
+
+        h2 {
+            font-size: 2em;
+            color: #fff;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .input-box {
+            position: relative;
+            width: 100%;
+            height: 50px;
+            border-bottom: 2px solid #fff;
+            margin: 30px 0;
+        }
+
+        .input-box label {
+            position: absolute;
+            top: 50%; left: 5px;
+            transform: translateY(-50%);
+            font-size: 1em;
+            color: #fff;
+            pointer-events: none;
+            transition: .5s;
+        }
+
+        .input-box input:focus ~ label,
+        .input-box input:valid ~ label {
+            top: -5px;
+            color: #38bdf8;
+        }
+
+        .input-box input {
+            width: 100%; height: 100%;
+            background: transparent;
+            border: none; outline: none;
+            font-size: 1em; color: #fff;
+            padding: 0 35px 0 5px;
+        }
+
+        .input-box .icon {
+            position: absolute; right: 8px;
+            font-size: 1.2em; color: #fff;
+            line-height: 57px;
+        }
+
+        button {
+            width: 100%; height: 45px;
+            background: #fff; border: none;
+            border-radius: 6px; cursor: pointer;
+            font-size: 1em; color: #333;
+            font-weight: 600; transition: 0.3s;
+        }
+
+        button:hover {
+            background: #38bdf8; color: #fff;
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.6);
+        }
+
+        .register-link, .login-register {
+            font-size: .9em; color: #fff;
+            text-align: center; margin: 25px 0 10px;
+        }
+        
+        .register-link a, .login-register a {
+            color: #fff; text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .register-link a:hover, .login-register a:hover {
+            text-decoration: underline; color: #38bdf8;
+        }
+        
+        .remember-forgot {
+            display: flex; justify-content: space-between;
+            font-size: 0.9em; margin-bottom: 15px;
+        }
+        .remember-forgot a { color: white; text-decoration: none; }
+        .remember-forgot a:hover { text-decoration: underline; }
+
+        /* Flash Messages */
+        .flash-container {
+            position: absolute; top: 10px; width: 100%;
+            display: flex; justify-content: center; z-index: 100;
+        }
+        .flash {
+            padding: 10px 20px; border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);
+            color: white; margin-bottom: 10px;
+        }
+    </style>
 </head>
 <body>
 
-    <div class="wrapper">
-        
+    <div class="background-container">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <div class="flash-container">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                <div style="position: absolute; top: 20px; z-index: 100;">
                 {% for category, message in messages %}
-                    <div style="background: rgba(255,0,0,0.7); color: white; padding: 10px 20px; border-radius: 5px; margin-bottom: 10px; backdrop-filter: blur(5px);">
-                        {{ message }}
-                    </div>
+                    <div class="flash">{{ message }}</div>
                 {% endfor %}
-                </div>
             {% endif %}
         {% endwith %}
+    </div>
 
+    <div class="wrapper">
+        
         <div class="form-box login">
+            <h2>Login</h2>
             <form action="/login" method="POST">
                 <input type="hidden" name="action" value="login">
-                <h2>Login</h2>
-        
+                
                 <div class="input-box">
-                    <span class="icon">
-                        <ion-icon name="person"></ion-icon>
-                    </span>
-                    <input type="text" name="username" required>
+                    <span class="icon"><ion-icon name="person"></ion-icon></span>
+                    <input type="text" name="username" required autocomplete="off">
                     <label>Username</label>
                 </div>
-        
+                
                 <div class="input-box">
-                    <span class="icon">
-                        <ion-icon name="lock-closed"></ion-icon>
-                    </span>
+                    <span class="icon"><ion-icon name="lock-closed"></ion-icon></span>
                     <input type="password" name="password" required>
                     <label>Password</label>
                 </div>
-        
+                
                 <div class="remember-forgot">
                     <label><input type="checkbox"> Remember me</label>
                     <a href="/reset_password">Forgot Password?</a>
                 </div>
-        
+                
                 <button type="submit">Login</button>
-        
+                
                 <div class="register-link">
                     <p>Don't have an account? <a href="#" class="register-btn">Register</a></p>
                 </div>
@@ -57,52 +220,81 @@
         </div>
 
         <div class="form-box register" style="display: none;">
+            <h2>Register</h2>
             <form action="/login" method="POST">
                 <input type="hidden" name="action" value="register">
-                <h2>Registration</h2>
-        
+                
                 <div class="input-box">
-                    <span class="icon">
-                        <ion-icon name="person"></ion-icon>
-                    </span>
-                    <input type="text" name="username" required>
+                    <span class="icon"><ion-icon name="person"></ion-icon></span>
+                    <input type="text" name="username" required autocomplete="off">
                     <label>Username</label>
                 </div>
 
                 <div class="input-box">
-                    <span class="icon">
-                        <ion-icon name="mail"></ion-icon>
-                    </span>
-                    <input type="email" name="email" required>
+                    <span class="icon"><ion-icon name="mail"></ion-icon></span>
+                    <input type="email" name="email" required autocomplete="off">
                     <label>Email</label>
                 </div>
-        
+                
                 <div class="input-box">
-                    <span class="icon">
-                        <ion-icon name="lock-closed"></ion-icon>
-                    </span>
+                    <span class="icon"><ion-icon name="lock-closed"></ion-icon></span>
                     <input type="password" name="password" required>
                     <label>Password</label>
                 </div>
-        
+                
                 <div class="remember-forgot">
-                    <label><input type="checkbox" required> I agree to the terms & conditions</label>
+                    <label><input type="checkbox" required> I agree to terms</label>
                 </div>
-        
+                
                 <button type="submit">Register</button>
-        
+                
                 <div class="register-link">
                     <p>Already have an account? <a href="#" class="login-btn">Login</a></p>
                 </div>
             </form>
         </div>
-      
+
     </div>
 
-    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
-    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
-    
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        // --- JAVASCRIPT ANIMATIONS (Paste this directly here) ---
+        document.addEventListener("DOMContentLoaded", () => {
+            const wrapper = document.querySelector('.wrapper');
+            const loginBox = document.querySelector('.form-box.login');
+            const registerBox = document.querySelector('.form-box.register');
+            const registerBtn = document.querySelector('.register-btn');
+            const loginBtn = document.querySelector('.login-btn');
 
+            // 1. Initial Float In Animation
+            gsap.from(".wrapper", { duration: 1.5, y: 100, opacity: 0, ease: "power4.out" });
+            gsap.from(".blob", { duration: 2, scale: 0, opacity: 0, stagger: 0.2, ease: "elastic.out(1, 0.5)" });
+
+            // 2. Switch to Register
+            registerBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                // Fade out Login
+                gsap.to(loginBox, { duration: 0.5, x: -50, opacity: 0, display: 'none', onComplete: () => {
+                    // Fade in Register
+                    gsap.fromTo(registerBox, 
+                        { x: 50, opacity: 0, display: 'flex' }, 
+                        { x: 0, opacity: 1, duration: 0.5 }
+                    );
+                }});
+            });
+
+            // 3. Switch to Login
+            loginBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                // Fade out Register
+                gsap.to(registerBox, { duration: 0.5, x: 50, opacity: 0, display: 'none', onComplete: () => {
+                    // Fade in Login
+                    gsap.fromTo(loginBox, 
+                        { x: -50, opacity: 0, display: 'flex' }, 
+                        { x: 0, opacity: 1, duration: 0.5 }
+                    );
+                }});
+            });
+        });
+    </script>
 </body>
 </html>
