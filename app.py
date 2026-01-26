@@ -3,6 +3,8 @@ import requests
 import json
 import random
 import io
+import cloudinary
+import cloudinary.uploader
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_file
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -16,8 +18,16 @@ from xhtml2pdf import pisa
 app = Flask(__name__)
 
 # --- 1. CONFIGURATION ---
+# SERP API KEY (For Google Shopping & Lens)
 SERP_API_KEY = "d66eccb121b3453152187f2442537b0fe5b3c82c4b8d4d56b89ed4d52c9f01a6"
-IMGBB_API_KEY = "87df018357b1a6f5db2ce206a262a2f8" # <--- GET THIS FREE FROM https://api.imgbb.com/
+
+# CLOUDINARY CONFIG (For Visual Search Image Hosting)
+# GET THESE FREE FROM: https://cloudinary.com/console
+cloudinary.config(
+  cloud_name = "dexdiyp2g", 
+  api_key = "385994499446587", 
+  api_secret = "CNR7F68BiUiDwmvMlVTTeDaK2qE" 
+)
 
 # Database Config (Neon + Local Fallback)
 NEON_DB_URL = "postgresql://neondb_owner:npg_d3OshXYJxvl6@ep-misty-hat-a1bla5w6.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
@@ -32,8 +42,6 @@ if database_url and database_url.startswith("postgres://"):
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'future_shop_secret_key_999')
-app.config['UPLOAD_FOLDER'] = 'static/uploads'
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -218,7 +226,7 @@ def index():
     
     return render_template("index.html", user=current_user, recommendations=recommendations, rec_topic=query, t=t, lang=lang)
 
-# --- VISUAL SEARCH ---
+# --- VISUAL SEARCH (CLOUDINARY) ---
 @app.route("/visual_search", methods=["POST"])
 @login_required
 def visual_search():
@@ -232,19 +240,13 @@ def visual_search():
         return redirect(url_for('index'))
 
     if file:
-        # 1. Save locally temporarily
-        filename = secure_filename(file.filename)
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(filepath)
-
         try:
-            # 2. Upload to ImgBB
-            with open(filepath, "rb") as img_file:
-                payload = {"key": IMGBB_API_KEY, "image": img_file.read()}
-                response = requests.post("https://api.imgbb.com/1/upload", data=payload)
-                img_url = response.json()['data']['url']
-
-            # 3. Send to Google Lens (SerpApi)
+            # 1. Upload directly to Cloudinary
+            flash("Uploading image to AI cloud...", "info")
+            upload_result = cloudinary.uploader.upload(file)
+            img_url = upload_result["secure_url"]
+            
+            # 2. Send Public URL to Google Lens (SerpApi)
             params = {
                 "engine": "google_lens",
                 "url": img_url,
@@ -252,17 +254,17 @@ def visual_search():
             }
             data = requests.get("https://serpapi.com/search", params=params).json()
             
-            # 4. Extract best match
+            # 3. Extract Best Match
             if "visual_matches" in data and len(data["visual_matches"]) > 0:
                 best_match = data["visual_matches"][0].get("title")
                 flash(f"AI identified: {best_match}", "success")
                 return redirect(url_for('search', q=best_match))
             else:
-                flash("AI couldn't identify the image. Try another.", "error")
+                flash("AI couldn't identify the image. Try a clearer photo.", "error")
 
         except Exception as e:
             print(f"Visual Search Error: {e}")
-            flash("Visual search failed. Check API Keys.", "error")
+            flash("Visual search failed. Check console for details.", "error")
             
     return redirect(url_for('index'))
 
