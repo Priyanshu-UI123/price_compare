@@ -17,7 +17,7 @@ app = Flask(__name__)
 
 # --- 1. CONFIGURATION ---
 SERP_API_KEY = "d66eccb121b3453152187f2442537b0fe5b3c82c4b8d4d56b89ed4d52c9f01a6"
-IMGBB_API_KEY = "ad60bca4f1b668377f26e999d311ab36" # <--- GET THIS FREE FROM https://api.imgbb.com/
+IMGBB_API_KEY = "87df018357b1a6f5db2ce206a262a2f8" # <--- GET THIS FREE FROM https://api.imgbb.com/
 
 # Database Config (Neon + Local Fallback)
 NEON_DB_URL = "postgresql://neondb_owner:npg_d3OshXYJxvl6@ep-misty-hat-a1bla5w6.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
