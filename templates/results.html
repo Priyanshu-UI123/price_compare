@@ -29,7 +29,6 @@
 
         .controls { display: flex; gap: 15px; align-items: center; }
 
-        /* CLAY BUTTONS & INPUTS */
         .clay-btn {
             padding: 10px 20px; border-radius: 15px; background: #eef2f5; border: none; 
             font-weight: 600; color: #555; text-decoration: none; cursor: pointer;
@@ -49,11 +48,22 @@
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 40px; padding: 40px 50px; }
 
         .card-perspective { perspective: 1000px; height: 520px; }
+        
         .card-inner { 
             position: relative; width: 100%; height: 100%; text-align: center; 
             transition: transform 0.8s; transform-style: preserve-3d; 
         }
+        
         .card-inner.flipped { transform: rotateY(180deg); }
+
+        /* --- IMPORTANT FIX: POINTER EVENTS --- */
+        /* By default, back is not clickable */
+        .card-back { pointer-events: none; }
+        .card-front { pointer-events: auto; }
+
+        /* When flipped, Front is not clickable, Back IS clickable */
+        .card-inner.flipped .card-front { pointer-events: none; }
+        .card-inner.flipped .card-back { pointer-events: auto; }
 
         .card-front, .card-back { 
             position: absolute; width: 100%; height: 100%; backface-visibility: hidden; 
@@ -61,6 +71,7 @@
             box-shadow: 10px 10px 20px #d1d9e6, -10px -10px 20px #ffffff;
             display: flex; flex-direction: column; justify-content: space-between;
         }
+        
         .card-back { transform: rotateY(180deg); }
 
         .top-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; position: relative; z-index: 10; }
@@ -73,7 +84,6 @@
         
         .store-badge { font-size: 0.75rem; font-weight: bold; color: #888; background: #eef2f5; padding: 5px 10px; border-radius: 10px; box-shadow: inset 3px 3px 6px #d1d9e6, inset -3px -3px 6px #ffffff; }
 
-        /* CLICKABLE LINK AREA */
         .product-link { text-decoration: none; color: inherit; display: block; flex-grow: 1; display: flex; flex-direction: column; }
 
         .img-box {
@@ -93,7 +103,6 @@
         .bar-bg { width: 100%; height: 8px; background: #eef2f5; border-radius: 5px; box-shadow: inset 2px 2px 5px #d1d9e6, inset -2px -2px 5px #ffffff; overflow: hidden; }
         .bar-fill { height: 100%; border-radius: 5px; width: 0%; transition: 1s; }
 
-        /* ACTIONS */
         .actions { display: flex; gap: 10px; position: relative; z-index: 10; }
         .icon-btn {
             width: 45px; height: 45px; border-radius: 50%; border: none; cursor: pointer;
@@ -207,7 +216,7 @@
                             <canvas id="chart-{{ loop.index }}"></canvas>
                         </div>
                         
-                        <button type="button" class="clay-btn" style="width:100%; justify-content:center;" onclick="event.stopPropagation(); hideGraph('{{ loop.index }}')">
+                        <button type="button" class="clay-btn" style="width:100%; justify-content:center;" onclick="hideGraph('{{ loop.index }}')">
                             Back to Product
                         </button>
                     </div>
@@ -259,21 +268,23 @@
         }
         function closeQR() { document.getElementById('qrModal').style.display = "none"; }
 
-        // --- GRAPH FLIP LOGIC ---
+        // --- GRAPH LOGIC ---
         let chartInstances = {};
         
         function showGraph(index, currentPrice) {
             const card = document.getElementById(`card-${index}`);
             if (card) card.classList.add('flipped');
             
-            if (chartInstances[index]) return; // Graph already exists
+            if (chartInstances[index]) return; 
             
             const base = parseFloat(currentPrice); 
             if (!base) return;
             
             let dataPoints = [], labels = [];
             for (let i = 6; i >= 0; i--) { 
-                labels.push(i === 0 ? "Today" : `${i}d ago`); 
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                labels.push(d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' })); 
                 dataPoints.push(base + (Math.random() * base * 0.2 - base * 0.1)); 
             }
 
@@ -288,17 +299,23 @@
                         tension: 0.4, fill: true 
                     }] 
                 }, 
-                options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { display:false }, y: { display:false } } } 
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }, 
+                    scales: { 
+                        x: { display: true, ticks: { color: '#888', font: { size: 10 } }, grid: { display: false } }, 
+                        y: { display: true, ticks: { color: '#0ef', font: { size: 10 } }, grid: { color: 'rgba(0,0,0,0.05)' } } 
+                    } 
+                } 
             });
         }
 
-        // --- FIXED HIDE GRAPH FUNCTION ---
+        // --- FIXED FLIP BACK FUNCTION ---
         function hideGraph(index) {
             const card = document.getElementById(`card-${index}`);
             if (card) {
                 card.classList.remove('flipped');
-            } else {
-                console.error("Card not found:", index);
             }
         }
 
