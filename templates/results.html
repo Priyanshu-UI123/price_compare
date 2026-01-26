@@ -186,11 +186,11 @@
                                 <button type="submit" class="add-cart">Add</button>
                             </form>
                             
-                            <button class="icon-btn" onclick="showGraph('{{ loop.index }}', '{{ item.price_value }}')">
+                            <button type="button" class="icon-btn" onclick="showGraph('{{ loop.index }}', '{{ item.price_value }}')">
                                 <ion-icon name="stats-chart"></ion-icon>
                             </button>
                             
-                            <button class="icon-btn" onclick="openQR('{{ item.link }}')">
+                            <button type="button" class="icon-btn" onclick="openQR('{{ item.link }}')">
                                 <ion-icon name="qr-code"></ion-icon>
                             </button>
                             
@@ -206,7 +206,8 @@
                         <div class="graph-container">
                             <canvas id="chart-{{ loop.index }}"></canvas>
                         </div>
-                        <button class="clay-btn" style="justify-content:center;" onclick="hideGraph('{{ loop.index }}')">
+                        
+                        <button type="button" class="clay-btn" style="width:100%; justify-content:center;" onclick="event.stopPropagation(); hideGraph('{{ loop.index }}')">
                             Back to Product
                         </button>
                     </div>
@@ -258,11 +259,17 @@
         }
         function closeQR() { document.getElementById('qrModal').style.display = "none"; }
 
+        // --- GRAPH FLIP LOGIC ---
         let chartInstances = {};
+        
         function showGraph(index, currentPrice) {
-            document.getElementById(`card-${index}`).classList.add('flipped');
-            if (chartInstances[index]) return;
-            const base = parseFloat(currentPrice); if (!base) return;
+            const card = document.getElementById(`card-${index}`);
+            if (card) card.classList.add('flipped');
+            
+            if (chartInstances[index]) return; // Graph already exists
+            
+            const base = parseFloat(currentPrice); 
+            if (!base) return;
             
             let dataPoints = [], labels = [];
             for (let i = 6; i >= 0; i--) { 
@@ -284,7 +291,16 @@
                 options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { display:false }, y: { display:false } } } 
             });
         }
-        function hideGraph(index) { document.getElementById(`card-${index}`).classList.remove('flipped'); }
+
+        // --- FIXED HIDE GRAPH FUNCTION ---
+        function hideGraph(index) {
+            const card = document.getElementById(`card-${index}`);
+            if (card) {
+                card.classList.remove('flipped');
+            } else {
+                console.error("Card not found:", index);
+            }
+        }
 
         let selected = [];
         function handleSelection(checkbox) {
