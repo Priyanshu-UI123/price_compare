@@ -189,6 +189,12 @@
                 <ion-icon name="search" class="icon"></ion-icon>
                 <input type="text" id="searchInput" name="q" placeholder="{{ t['placeholder'] }}" required>
                 <ion-icon name="mic" class="icon" onclick="startVoiceSearch()"></ion-icon>
+
+<form id="imgForm" action="/visual_search" method="POST" enctype="multipart/form-data" style="display:none;">
+    <input type="file" name="image" id="imgInput" accept="image/*" onchange="document.getElementById('imgForm').submit()">
+</form>
+
+<ion-icon name="camera" class="icon" onclick="document.getElementById('imgInput').click()" style="margin-left: 10px;"></ion-icon>
             </div>
             
             <div class="btn-group">

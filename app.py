@@ -7,6 +7,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 from datetime import datetime
 from textblob import TextBlob
 from sqlalchemy import func
@@ -16,6 +17,7 @@ app = Flask(__name__)
 
 # --- 1. CONFIGURATION ---
 SERP_API_KEY = "d66eccb121b3453152187f2442537b0fe5b3c82c4b8d4d56b89ed4d52c9f01a6"
+IMGBB_API_KEY = "ad60bca4f1b668377f26e999d311ab36" # <--- GET THIS FREE FROM https://api.imgbb.com/
 
 # Database Config (Neon + Local Fallback)
 NEON_DB_URL = "postgresql://neondb_owner:npg_d3OshXYJxvl6@ep-misty-hat-a1bla5w6.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
@@ -30,6 +32,8 @@ if database_url and database_url.startswith("postgres://"):
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'future_shop_secret_key_999')
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -199,11 +203,10 @@ def index():
         data = requests.get("https://serpapi.com/search", params=params).json()
         
         for item in data.get("shopping_results", [])[:3]:
-            # --- FIX: Handle Relative Links ---
+            # Link Fix for Recommendations
             link = item.get("link") or item.get("product_link")
             if link and link.startswith("/"):
                 link = f"https://www.google.com{link}"
-            # ----------------------------------
 
             trust_score = get_ai_trust_score(item.get("title"), item.get("source", "Unknown"))
             recommendations.append({
@@ -215,6 +218,55 @@ def index():
     
     return render_template("index.html", user=current_user, recommendations=recommendations, rec_topic=query, t=t, lang=lang)
 
+# --- VISUAL SEARCH ---
+@app.route("/visual_search", methods=["POST"])
+@login_required
+def visual_search():
+    if 'image' not in request.files:
+        flash('No image uploaded', 'error')
+        return redirect(url_for('index'))
+    
+    file = request.files['image']
+    if file.filename == '':
+        flash('No image selected', 'error')
+        return redirect(url_for('index'))
+
+    if file:
+        # 1. Save locally temporarily
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
+
+        try:
+            # 2. Upload to ImgBB
+            with open(filepath, "rb") as img_file:
+                payload = {"key": IMGBB_API_KEY, "image": img_file.read()}
+                response = requests.post("https://api.imgbb.com/1/upload", data=payload)
+                img_url = response.json()['data']['url']
+
+            # 3. Send to Google Lens (SerpApi)
+            params = {
+                "engine": "google_lens",
+                "url": img_url,
+                "api_key": SERP_API_KEY
+            }
+            data = requests.get("https://serpapi.com/search", params=params).json()
+            
+            # 4. Extract best match
+            if "visual_matches" in data and len(data["visual_matches"]) > 0:
+                best_match = data["visual_matches"][0].get("title")
+                flash(f"AI identified: {best_match}", "success")
+                return redirect(url_for('search', q=best_match))
+            else:
+                flash("AI couldn't identify the image. Try another.", "error")
+
+        except Exception as e:
+            print(f"Visual Search Error: {e}")
+            flash("Visual search failed. Check API Keys.", "error")
+            
+    return redirect(url_for('index'))
+
+# --- USER ROUTES ---
 @app.route("/account")
 @login_required
 def account():

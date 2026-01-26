@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Results - Clay</title>
+    <title>Results - Cyber Clay</title>
     
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -61,7 +61,8 @@
         /* --- GRID & CARD --- */
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 40px; padding: 40px 50px; }
 
-        .card-perspective { perspective: 1000px; height: 520px; }
+        .card-perspective { perspective: 1000px; height: 540px; } /* Slightly taller for safety */
+        
         .card-inner { 
             position: relative; width: 100%; height: 100%; text-align: center; 
             transition: transform 0.8s; transform-style: preserve-3d; 
@@ -78,7 +79,7 @@
         }
         .card-back { transform: rotateY(180deg); }
 
-        /* POINTER EVENTS FIX */
+        /* --- POINTER EVENTS FIX (CRITICAL FOR FLIP) --- */
         .card-back { pointer-events: none; }
         .card-front { pointer-events: auto; }
         .card-inner.flipped .card-front { pointer-events: none; }
@@ -133,15 +134,12 @@
         }
         .icon-btn:hover { color: var(--neon); transform: translateY(-2px); text-shadow: 0 0 5px var(--neon); }
 
-        /* --- UPDATED ADD CART BUTTON --- */
+        /* ADD CART BTN */
         .add-cart {
-            flex: 2; /* Takes up more space */
-            height: 45px; /* Matches height of icon buttons */
-            border-radius: 15px; border: none; background: var(--surface-color); 
+            flex: 2; height: 45px; border-radius: 15px; border: none; background: var(--surface-color); 
             color: var(--neon); font-weight: bold; cursor: pointer; font-size: 1rem;
             box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light); 
-            transition: 0.2s;
-            display: flex; align-items: center; justify-content: center;
+            transition: 0.2s; display: flex; align-items: center; justify-content: center;
         }
         .add-cart:hover { background: var(--neon); color: #1f242d; box-shadow: 0 0 15px var(--neon); }
 
@@ -177,6 +175,13 @@
                     <option value="high" {% if sort_order == 'high' %}selected{% endif %}>High to Low</option>
                 </select>
             </form>
+
+            <form id="resImgForm" action="/visual_search" method="POST" enctype="multipart/form-data" style="display:none;">
+                <input type="file" name="image" id="resImgInput" accept="image/*" onchange="document.getElementById('resImgForm').submit()">
+            </form>
+            <button class="clay-btn" onclick="document.getElementById('resImgInput').click()">
+                <ion-icon name="camera" style="font-size:1.2rem;"></ion-icon>
+            </button>
 
             <a href="/cart" class="clay-btn"><ion-icon name="cart"></ion-icon> Cart</a>
             <a href="/" class="clay-btn">New Search</a>
@@ -244,7 +249,7 @@
                             <canvas id="chart-{{ loop.index }}"></canvas>
                         </div>
                         
-                        <button type="button" class="clay-btn" style="width:100%; justify-content:center;" onclick="hideGraph('{{ loop.index }}')">
+                        <button type="button" class="clay-btn" style="width:100%; justify-content:center;" onclick="event.stopPropagation(); hideGraph('{{ loop.index }}')">
                             Back to Product
                         </button>
                     </div>
@@ -296,6 +301,7 @@
         }
         function closeQR() { document.getElementById('qrModal').style.display = "none"; }
 
+        // --- GRAPH LOGIC (With Visible Dates) ---
         let chartInstances = {};
         
         function showGraph(index, currentPrice) {
