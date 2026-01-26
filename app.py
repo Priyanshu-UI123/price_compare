@@ -8,21 +8,14 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 from textblob import TextBlob
-from sqlalchemy import func 
+from sqlalchemy import func
 
 app = Flask(__name__)
 
 # --- 1. CONFIGURATION ---
 SERP_API_KEY = "d66eccb121b3453152187f2442537b0fe5b3c82c4b8d4d56b89ed4d52c9f01a6"
 
-# Email Config (REVERTED TO PUPUHARI123)
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'pupuhari123@gmail.com'  # <--- BACK TO ORIGINAL
-app.config['MAIL_PASSWORD'] = 'flfl rpac nsqz wprl' # <--- UPDATE THIS CODE!
-
-# Database Config
+# Database Config (Neon + Local Fallback)
 NEON_DB_URL = "postgresql://neondb_owner:npg_d3OshXYJxvl6@ep-misty-hat-a1bla5w6.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
 
 database_url = os.environ.get('DATABASE_URL')
@@ -36,11 +29,12 @@ app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'future_shop_secret_key_999')
 
+# Initialize Extensions
 db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
-login_manager.login_message = None
+login_manager.login_message = None  # Disables the "Please log in..." flash message
 
 # --- 2. DATABASE MODELS ---
 class User(UserMixin, db.Model):
@@ -82,33 +76,44 @@ def extract_price(p):
         return 0
 
 def get_ai_trust_score(product_title, store):
+    """
+    Simulates fetching reviews and running Sentiment Analysis using TextBlob.
+    """
     if "amazon" in store.lower() or "flipkart" in store.lower():
         base_reviews = ["Great product", "Fast delivery", "Genuine item", "Loved it", "Good packaging"]
     else:
         base_reviews = ["Okay product", "Late delivery", "Average quality", "Decent for the price"]
 
     variations = ["Worth the money", "Not bad", "Could be better", "Amazing performance", "Terrible support"]
+    
+    # Generate 5 random reviews
     product_reviews = random.sample(base_reviews + variations, 5)
     
+    # RUN AI SENTIMENT ANALYSIS (TextBlob)
     total_polarity = 0
     for review in product_reviews:
         analysis = TextBlob(review)
         total_polarity += analysis.sentiment.polarity
 
+    # Calculate Score (0 to 100)
     avg_polarity = total_polarity / len(product_reviews)
     trust_score = int((avg_polarity + 1) * 50) 
+    
+    # Boost score slightly for trusted stores
     if "amazon" in store.lower() or "flipkart" in store.lower():
         trust_score += 10
+        
     return min(max(trust_score, 0), 100)
 
 # --- 4. ROUTES ---
 
+# --- AUTH ROUTES ---
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if current_user.is_authenticated: return redirect(url_for('index'))
     if request.method == "POST":
         action = request.form.get('action')
-        username = request.form.get('username')
+        user_input = request.form.get('username') # Can be username OR email
         password = request.form.get('password')
         
         if action == 'register':
@@ -117,13 +122,14 @@ def login():
                 flash('Email already exists.', 'error')
             else:
                 hashed_pw = generate_password_hash(password, method='pbkdf2:sha256')
-                new_user = User(username=username, email=email, password=hashed_pw)
+                new_user = User(username=user_input, email=email, password=hashed_pw)
                 db.session.add(new_user)
                 db.session.commit()
                 flash('Account created! Please login.', 'success')
         
         elif action == 'login':
-            user = User.query.filter((User.username == username) | (User.email == username)).first()
+            # Check if user_input matches either username OR email
+            user = User.query.filter((User.username == user_input) | (User.email == user_input)).first()
             if user and check_password_hash(user.password, password):
                 login_user(user)
                 return redirect(url_for('index'))
@@ -137,13 +143,13 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
-# --- DIRECT PASSWORD RESET (NO EMAIL REQUIRED) ---
 @app.route("/reset_password", methods=['GET', 'POST'])
 def reset_request():
     if request.method == 'POST':
         email = request.form.get('email')
         new_password = request.form.get('password')
         
+        # If password is provided, perform update
         if new_password:
             user = User.query.filter_by(email=email).first()
             if user:
@@ -153,6 +159,7 @@ def reset_request():
                 flash('Success! Password has been changed.', 'success')
                 return redirect(url_for('login'))
         
+        # If only email, check existence
         user = User.query.filter_by(email=email).first()
         if user:
             flash(f'Account found for {email}. Set new password below.', 'success')
@@ -163,11 +170,39 @@ def reset_request():
 
     return render_template('reset_request.html', step='email')
 
-# --- MAIN APP ROUTES ---
+# --- MAIN ROUTES ---
 @app.route("/")
 @login_required
 def index():
-    return render_template("index.html", user=current_user)
+    # --- AI RECOMMENDATION ENGINE ---
+    recommendations = []
+    
+    # 1. Get last search
+    last_search = SearchHistory.query.filter_by(user_id=current_user.id).order_by(SearchHistory.timestamp.desc()).first()
+    
+    query = "futuristic gadgets" # Default if no history
+    if last_search:
+        query = last_search.search_query
+
+    # 2. Fetch recommendations
+    try:
+        # Limit to 3 results for the home page
+        params = {"engine": "google_shopping", "q": query, "hl": "en", "gl": "in", "api_key": SERP_API_KEY, "num": 3}
+        data = requests.get("https://serpapi.com/search", params=params).json()
+        
+        for item in data.get("shopping_results", [])[:3]:
+            trust_score = get_ai_trust_score(item.get("title"), item.get("source", "Unknown"))
+            recommendations.append({
+                "title": item.get("title"),
+                "price": item.get("price", "N/A"),
+                "image": item.get("thumbnail"),
+                "link": item.get("link"),
+                "score": trust_score
+            })
+    except Exception as e:
+        print(f"Rec Error: {e}")
+
+    return render_template("index.html", user=current_user, recommendations=recommendations, rec_topic=query)
 
 @app.route("/account")
 @login_required
@@ -225,8 +260,10 @@ def remove_wishlist(id):
 def search():
     product = request.args.get("q") or request.form.get("product")
     sort_order = request.args.get("sort")
+    
     if not product: return redirect(url_for('index'))
 
+    # Save to history if it's a new search
     if request.method == "POST" or (request.args.get("q") and not request.args.get("sort")):
         last = SearchHistory.query.filter_by(user_id=current_user.id).order_by(SearchHistory.timestamp.desc()).first()
         if not last or last.search_query != product:
@@ -240,14 +277,18 @@ def search():
         for item in data.get("shopping_results", []):
             link = item.get("link") or item.get("product_link")
             if link and link.startswith("/"): link = f"https://www.google.co.in{link}"
+            
             trust_score = get_ai_trust_score(item.get("title"), item.get("source", "Unknown"))
+            
             results.append({
-                "title": item.get("title"), "store": item.get("source", "Unknown"), "price": item.get("price", "N/A"),
-                "price_value": extract_price(item.get("price", "0")), "link": link, "thumbnail": item.get("thumbnail"),
-                "trust_score": trust_score 
+                "title": item.get("title"), "store": item.get("source", "Unknown"), 
+                "price": item.get("price", "N/A"), "price_value": extract_price(item.get("price", "0")), 
+                "link": link, "thumbnail": item.get("thumbnail"), "trust_score": trust_score 
             })
+        
         if sort_order == 'low': results.sort(key=lambda x: x["price_value"])
         elif sort_order == 'high': results.sort(key=lambda x: x["price_value"], reverse=True)
+            
         return render_template("results.html", product=product, results=results, sort_order=sort_order)
     except Exception as e:
         print(f"Search Error: {e}")
@@ -270,11 +311,11 @@ def compare():
     except: pass
     return render_template("compare.html", p1=p1, p2=p2, winner=winner)
 
-# --- ADMIN DASHBOARD ---
+# --- ADMIN ROUTE ---
 @app.route("/admin")
 @login_required
 def admin():
-    # SECURITY REVERTED: Only pupuhari123 can access
+    # Only allow pupuhari123
     if current_user.email != 'pupuhari123@gmail.com':
         flash("Access Denied: Admins only.", "error")
         return redirect(url_for('index'))

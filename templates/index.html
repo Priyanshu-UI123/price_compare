@@ -14,11 +14,12 @@
         body { 
             display: flex; justify-content: center; align-items: center; 
             min-height: 100vh; background: #1f242d; color: #fff; 
-            overflow: hidden; flex-direction: column; 
+            overflow-x: hidden; flex-direction: column; 
         }
         
         #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
         
+        /* SEARCH WRAPPER */
         .wrapper { 
             width: 90%; max-width: 500px; 
             background: rgba(31, 36, 45, 0.75); 
@@ -26,67 +27,72 @@
             border-radius: 20px; 
             backdrop-filter: blur(10px); 
             padding: 40px; text-align: center; 
+            margin-top: 50px; /* Space for Nav */
+            z-index: 10;
         }
         
         .input-box { position: relative; width: 100%; margin-bottom: 25px; }
-        
-        .input-box input { 
-            width: 100%; padding: 15px 50px 15px 50px; 
-            background: rgba(255, 255, 255, 0.05); 
-            border: 2px solid rgba(255, 255, 255, 0.1); 
-            border-radius: 10px; color: white; outline: none; transition: 0.3s; 
-        }
-        
+        .input-box input { width: 100%; padding: 15px 50px 15px 50px; background: rgba(255, 255, 255, 0.05); border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 10px; color: white; outline: none; transition: 0.3s; }
         .input-box input:focus { border-color: #0ef; box-shadow: 0 0 10px rgba(0, 238, 255, 0.2); }
-        
-        .input-box .icon { 
-            position: absolute; left: 15px; top: 50%; transform: translateY(-50%); 
-            font-size: 1.2rem; color: #ccc; 
-        }
-        
-        /* Mic Icon */
-        .input-box .mic-icon { 
-            position: absolute; right: 15px; top: 50%; transform: translateY(-50%); 
-            font-size: 1.5rem; color: #ccc; cursor: pointer; transition: 0.3s;
-        }
+        .input-box .icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); font-size: 1.2rem; color: #ccc; }
+        .input-box .mic-icon { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 1.5rem; color: #ccc; cursor: pointer; transition: 0.3s; }
         .input-box .mic-icon:hover { color: #0ef; }
-        
-        @keyframes pulse-red {
-            0% { text-shadow: 0 0 0 rgba(255, 0, 0, 0.7); color: #ff3333; transform: translateY(-50%) scale(1); }
-            50% { text-shadow: 0 0 15px rgba(255, 0, 0, 0.9); color: #ff0000; transform: translateY(-50%) scale(1.2); }
-            100% { text-shadow: 0 0 0 rgba(255, 0, 0, 0.7); color: #ff3333; transform: translateY(-50%) scale(1); }
-        }
+        @keyframes pulse-red { 0% { text-shadow: 0 0 0 rgba(255, 0, 0, 0.7); color: #ff3333; transform: translateY(-50%) scale(1); } 50% { text-shadow: 0 0 15px rgba(255, 0, 0, 0.9); color: #ff0000; transform: translateY(-50%) scale(1.2); } 100% { text-shadow: 0 0 0 rgba(255, 0, 0, 0.7); color: #ff3333; transform: translateY(-50%) scale(1); } }
         .listening { animation: pulse-red 1.5s infinite; }
 
         .btn-group { display: flex; gap: 15px; }
         button { padding: 12px; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.3s; flex: 1; }
-        
         .search-btn { background: #0ef; color: #1f242d; box-shadow: 0 0 10px #0ef; }
         .search-btn:hover { transform: scale(1.05); }
-        
         .history-btn { background: transparent; color: #fff; border: 2px solid #fff; }
         .history-btn:hover { border-color: #0ef; color: #0ef; }
-        
         .wishlist-btn { background: transparent; color: #0ef; border: 2px solid #0ef; }
         .wishlist-btn:hover { background: #0ef; color: #1f242d; }
         
+        /* --- NEW: RECOMMENDATION SECTION --- */
+        .rec-section {
+            margin-top: 40px; width: 100%; max-width: 800px;
+            text-align: center;
+            opacity: 0; animation: fadeUp 1s ease-out 0.5s forwards; /* Delay animation */
+        }
+        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } from { opacity: 0; transform: translateY(20px); } }
+
+        .rec-title { font-size: 1rem; color: #ccc; margin-bottom: 15px; letter-spacing: 1px; }
+        .rec-title span { color: #0ef; font-weight: bold; text-transform: capitalize; }
+
+        .rec-grid {
+            display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;
+        }
+
+        .rec-card {
+            background: rgba(31, 36, 45, 0.6);
+            border: 1px solid rgba(0, 238, 255, 0.1);
+            border-radius: 15px;
+            padding: 15px;
+            width: 220px;
+            transition: 0.3s;
+            text-align: left;
+            text-decoration: none;
+            color: #fff;
+            display: flex; flex-direction: column; justify-content: space-between;
+        }
+        .rec-card:hover { transform: translateY(-5px); border-color: #0ef; box-shadow: 0 0 15px rgba(0, 238, 255, 0.2); }
+        
+        .rec-img { width: 100%; height: 120px; object-fit: contain; background: #fff; border-radius: 10px; margin-bottom: 10px; padding: 5px; }
+        .rec-name { font-size: 0.9rem; margin-bottom: 5px; height: 40px; overflow: hidden; }
+        .rec-price { color: #0ef; font-weight: bold; font-size: 1.1rem; }
+        .rec-score { font-size: 0.7rem; color: #aaa; margin-top: 5px; display: flex; align-items: center; gap: 5px; }
+        .rec-dot { width: 8px; height: 8px; background: #0f0; border-radius: 50%; display: inline-block; }
+
+        /* FOOTER & NAV */
         .footer-info { position: fixed; bottom: 10px; text-align: center; font-size: 0.8rem; color: rgba(255, 255, 255, 0.6); width: 100%; }
-        
-        /* --- NAV BAR (Logout & Admin) --- */
-        .nav-bar { position: absolute; top: 20px; right: 30px; display: flex; gap: 15px; }
-        
+        .nav-bar { position: absolute; top: 20px; right: 30px; display: flex; gap: 15px; z-index: 100; }
         .logout-btn { text-decoration: none; color: #fff; font-weight: 600; padding: 10px 20px; border: 2px solid #0ef; border-radius: 8px; transition: 0.3s; }
         .logout-btn:hover { background: #0ef; color: #1f242d; }
-
-        /* Admin Button Style */
-        .admin-btn { 
-            text-decoration: none; color: #ff3333; font-weight: 600; 
-            padding: 10px 20px; border: 2px solid #ff3333; border-radius: 8px; 
-            transition: 0.3s; 
-        }
+        .admin-btn { text-decoration: none; color: #ff3333; font-weight: 600; padding: 10px 20px; border: 2px solid #ff3333; border-radius: 8px; transition: 0.3s; }
         .admin-btn:hover { background: #ff3333; color: white; box-shadow: 0 0 15px #ff3333; }
 
-        /* CHATBOT STYLES */
+        /* CHATBOT */
         .chat-btn { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: #0ef; color: #1f242d; border-radius: 50%; border: none; display: flex; justify-content: center; align-items: center; font-size: 2rem; cursor: pointer; box-shadow: 0 0 20px rgba(0, 238, 255, 0.5); transition: 0.3s; z-index: 1000; }
         .chat-btn:hover { transform: scale(1.1); }
         .chat-window { position: fixed; bottom: 100px; right: 30px; width: 350px; height: 450px; background: rgba(31, 36, 45, 0.95); border: 2px solid #0ef; border-radius: 20px; display: none; flex-direction: column; overflow: hidden; backdrop-filter: blur(10px); z-index: 1000; box-shadow: 0 0 30px rgba(0,0,0,0.5); }
@@ -108,7 +114,6 @@
         {% if user.email == 'pupuhari123@gmail.com' %}
             <a href="/admin" class="admin-btn">Admin Panel</a>
         {% endif %}
-        
         <a href="/logout" class="logout-btn">Logout</a>
     </div>
     
@@ -120,9 +125,7 @@
             <div class="input-box">
                 <span class="icon"><ion-icon name="search"></ion-icon></span>
                 <input type="text" id="searchInput" name="q" placeholder="Enter product name..." required autocomplete="off">
-                <span class="mic-icon" onclick="startVoiceSearch()">
-                    <ion-icon name="mic"></ion-icon>
-                </span>
+                <span class="mic-icon" onclick="startVoiceSearch()"><ion-icon name="mic"></ion-icon></span>
             </div>
             
             <div class="btn-group">
@@ -134,6 +137,27 @@
         <p id="voiceStatus" style="font-size: 0.8rem; color: #888; margin-top: 10px; min-height: 20px;"></p>
     </div>
 
+    {% if recommendations %}
+    <div class="rec-section">
+        <div class="rec-title">Recommended based on <span>"{{ rec_topic }}"</span></div>
+        <div class="rec-grid">
+            {% for item in recommendations %}
+            <a href="{{ item.link }}" target="_blank" class="rec-card">
+                <img src="{{ item.image }}" class="rec-img" alt="Product">
+                <div>
+                    <div class="rec-name">{{ item.title }}</div>
+                    <div class="rec-price">{{ item.price }}</div>
+                    <div class="rec-score">
+                        <span class="rec-dot" style="background: {% if item.score > 80 %}#0f0{% elif item.score > 50 %}#ffaa00{% else %}#f00{% endif %};"></span>
+                        AI Score: {{ item.score }}%
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
     <button class="chat-btn" onclick="toggleChat()"><ion-icon name="chatbubbles"></ion-icon></button>
     <div class="chat-window" id="chatWindow">
         <div class="chat-header"><span>AI Assistant</span><ion-icon name="close" onclick="toggleChat()" style="cursor: pointer; font-size: 1.5rem;"></ion-icon></div>
@@ -144,7 +168,6 @@
     <div class="footer-info">Made with ❤️ by <strong>Priyansu</strong> | pupuhari123@gmail.com</div>
 
     <script>
-        // BACKGROUND PARTICLES
         const canvas = document.getElementById('bg-canvas'); const ctx = canvas.getContext('2d');
         let particles = []; function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize); resize();
@@ -153,21 +176,16 @@
         function animate() { ctx.clearRect(0, 0, canvas.width, canvas.height); particles.forEach(p => { p.update(); p.draw(); }); requestAnimationFrame(animate); } animate();
         gsap.from(".wrapper", { duration: 1.2, y: 50, opacity: 0, ease: "power3.out" });
 
-        // VOICE SEARCH
         function startVoiceSearch() {
             if ('webkitSpeechRecognition' in window) {
                 const recognition = new webkitSpeechRecognition();
                 recognition.onstart = () => { document.querySelector('.mic-icon').classList.add('listening'); document.getElementById('voiceStatus').innerText = "Listening..."; };
-                recognition.onresult = (e) => { 
-                    document.getElementById('searchInput').value = e.results[0][0].transcript; 
-                    document.getElementById('searchForm').submit(); 
-                };
+                recognition.onresult = (e) => { document.getElementById('searchInput').value = e.results[0][0].transcript; document.getElementById('searchForm').submit(); };
                 recognition.onend = () => { document.querySelector('.mic-icon').classList.remove('listening'); document.getElementById('voiceStatus').innerText = ""; };
                 recognition.start();
-            } else { alert("Voice search not supported in this browser."); }
+            } else { alert("Voice search not supported."); }
         }
 
-        // CHATBOT
         function toggleChat() { const w = document.getElementById('chatWindow'); w.style.display = w.style.display === 'flex' ? 'none' : 'flex'; }
         function handleEnter(e) { if(e.key === 'Enter') sendMessage(); }
         function sendMessage() {
