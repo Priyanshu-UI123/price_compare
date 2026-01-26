@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Results - Cyber Clay</title>
+    <title>Results - Clay</title>
     
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -124,7 +124,8 @@
         .bar-fill { height: 100%; border-radius: 5px; width: 0%; transition: 1s; box-shadow: 0 0 10px currentColor; }
 
         /* ACTIONS */
-        .actions { display: flex; gap: 10px; position: relative; z-index: 10; }
+        .actions { display: flex; gap: 10px; position: relative; z-index: 10; align-items: center; }
+        
         .icon-btn {
             width: 45px; height: 45px; border-radius: 50%; border: none; cursor: pointer;
             background: var(--surface-color); color: #888; display: flex; justify-content: center; align-items: center; font-size: 1.2rem;
@@ -132,10 +133,15 @@
         }
         .icon-btn:hover { color: var(--neon); transform: translateY(-2px); text-shadow: 0 0 5px var(--neon); }
 
+        /* --- UPDATED ADD CART BUTTON --- */
         .add-cart {
-            flex: 1; border-radius: 15px; border: none; background: var(--surface-color); 
-            color: var(--neon); font-weight: bold; cursor: pointer;
-            box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light); transition: 0.2s;
+            flex: 2; /* Takes up more space */
+            height: 45px; /* Matches height of icon buttons */
+            border-radius: 15px; border: none; background: var(--surface-color); 
+            color: var(--neon); font-weight: bold; cursor: pointer; font-size: 1rem;
+            box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light); 
+            transition: 0.2s;
+            display: flex; align-items: center; justify-content: center;
         }
         .add-cart:hover { background: var(--neon); color: #1f242d; box-shadow: 0 0 15px var(--neon); }
 
@@ -209,12 +215,12 @@
                         </a>
 
                         <div class="actions">
-                            <form action="/add_to_cart" method="POST" style="flex:1;">
+                            <form action="/add_to_cart" method="POST" style="flex:2;">
                                 <input type="hidden" name="title" value="{{ item.title }}">
                                 <input type="hidden" name="price" value="{{ item.price }}">
                                 <input type="hidden" name="image" value="{{ item.thumbnail }}">
                                 <input type="hidden" name="store" value="{{ item.store }}">
-                                <button type="submit" class="add-cart">Add</button>
+                                <button type="submit" class="add-cart">Add to Cart</button>
                             </form>
                             
                             <button type="button" class="icon-btn" onclick="showGraph('{{ loop.index }}', '{{ item.price_value }}')">
