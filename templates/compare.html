@@ -23,7 +23,6 @@
             width: 100%; max-width: 1000px; position: relative;
         }
 
-        /* VS Badge in the middle */
         .vs-badge {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: #ff3333; color: white; font-weight: 900; font-size: 2rem;
@@ -40,7 +39,6 @@
             transition: 0.3s; position: relative;
         }
 
-        /* Winner Glow Effect */
         .winner {
             border-color: #0f0;
             box-shadow: 0 0 30px rgba(0, 255, 0, 0.3);
@@ -67,6 +65,10 @@
         }
         .stat-label { color: #ccc; }
         .stat-val { font-weight: 600; }
+
+        /* NEW CLASSES TO FIX IDE ERRORS */
+        .score-green { color: #0f0; text-shadow: 0 0 5px #0f0; }
+        .score-orange { color: #ffaa00; text-shadow: 0 0 5px #ffaa00; }
 
         .buy-btn {
             margin-top: 30px; width: 100%; padding: 15px;
@@ -96,7 +98,9 @@
             </div>
             <div class="stat-row">
                 <span class="stat-label">AI Trust Score</span>
-                <span class="stat-val" style="color: {% if p1.score|int > 80 %}#0f0{% else %}#ffaa00{% endif %}">{{ p1.score }}%</span>
+                <span class="stat-val {% if p1.score|int > 80 %}score-green{% else %}score-orange{% endif %}">
+                    {{ p1.score }}%
+                </span>
             </div>
             
             <a href="{{ p1.link }}" target="_blank" class="buy-btn">Buy This One</a>
@@ -113,7 +117,9 @@
             </div>
             <div class="stat-row">
                 <span class="stat-label">AI Trust Score</span>
-                <span class="stat-val" style="color: {% if p2.score|int > 80 %}#0f0{% else %}#ffaa00{% endif %}">{{ p2.score }}%</span>
+                <span class="stat-val {% if p2.score|int > 80 %}score-green{% else %}score-orange{% endif %}">
+                    {{ p2.score }}%
+                </span>
             </div>
             
             <a href="{{ p2.link }}" target="_blank" class="buy-btn">Buy This One</a>
