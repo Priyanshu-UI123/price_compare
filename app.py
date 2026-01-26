@@ -3,14 +3,14 @@ import requests
 import json
 import random
 import io
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_file, make_response
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_file
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 from textblob import TextBlob
 from sqlalchemy import func
-from xhtml2pdf import pisa # NEW: For PDF Generation
+from xhtml2pdf import pisa 
 
 app = Flask(__name__)
 
@@ -35,9 +35,55 @@ db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
-login_manager.login_message = None
+login_manager.login_message = None 
 
-# --- 2. DATABASE MODELS ---
+# --- 2. MULTI-LANGUAGE DICTIONARY ---
+TRANSLATIONS = {
+    'en': {
+        'hello': "Hello",
+        'looking_for': "What are you looking for today?",
+        'placeholder': "Enter product name...",
+        'search_btn': "Search",
+        'history_btn': "History",
+        'admin_btn': "Admin Panel",
+        'logout_btn': "Logout",
+        'rec_title': "Recommended based on",
+        'voice_listen': "Listening...",
+        'ai_assistant': "AI Assistant",
+        'ask_me': 'Ask me to "Search for phones" or "Go to wishlist".',
+        'footer': "Made with ❤️ by Priyansu"
+    },
+    'hi': {
+        'hello': "नमस्ते",
+        'looking_for': "आज आप क्या खोज रहे हैं?",
+        'placeholder': "उत्पाद का नाम दर्ज करें...",
+        'search_btn': "खोजें",
+        'history_btn': "इतिहास",
+        'admin_btn': "एडमिन पैनल",
+        'logout_btn': "लॉग आउट",
+        'rec_title': "इसके आधार पर अनुशंसित",
+        'voice_listen': "सुन रहा हूँ...",
+        'ai_assistant': "एआई सहायक",
+        'ask_me': 'मुझसे "फोन खोजें" या "विशलिस्ट पर जाएं" के लिए कहें।',
+        'footer': "प्रियंशु द्वारा ❤️ के साथ बनाया गया"
+    },
+    'od': {
+        'hello': "ନମସ୍କାର",
+        'looking_for': "ଆଜି ଆପଣ କଣ ଖୋଜୁଛନ୍ତି?",
+        'placeholder': "ଉତ୍ପାଦର ନାମ ଦିଅନ୍ତୁ...",
+        'search_btn': "ସନ୍ଧାନ କରନ୍ତୁ",
+        'history_btn': "ଇତିହାସ",
+        'admin_btn': "ପ୍ରଶାସକ ପ୍ୟାନେଲ୍",
+        'logout_btn': "ଲଗ୍ ଆଉଟ୍",
+        'rec_title': "ଏହା ଉପରେ ଆଧାରିତ ସୁପାରିଶ",
+        'voice_listen': "ଶୁଣୁଛି...",
+        'ai_assistant': "AI ସହାୟକ",
+        'ask_me': 'ମୋତେ "ଫୋନ୍ ଖୋଜନ୍ତୁ" କିମ୍ବା "ୱିଶଲିଷ୍ଟକୁ ଯାଆନ୍ତୁ" ବୋଲି କୁହନ୍ତୁ |',
+        'footer': "ପ୍ରିୟାଂଶୁଙ୍କ ଦ୍ୱାରା ❤️ ସହିତ ତିଆରି"
+    }
+}
+
+# --- 3. DATABASE MODELS ---
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
@@ -60,13 +106,12 @@ class Wishlist(db.Model):
     image = db.Column(db.String(500))
     store = db.Column(db.String(100))
 
-# NEW: Shopping Cart Model
 class Cart(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     title = db.Column(db.String(500), nullable=False)
     price = db.Column(db.String(100))
-    price_val = db.Column(db.Float, default=0.0) # Numeric price for calculation
+    price_val = db.Column(db.Float, default=0.0) 
     image = db.Column(db.String(500))
     store = db.Column(db.String(100))
 
@@ -78,11 +123,10 @@ with app.app_context():
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# --- 3. HELPER FUNCTIONS ---
+# --- 4. HELPER FUNCTIONS ---
 def extract_price(p):
     if not p: return 0
     try:
-        # Removes currency symbols and commas to get a clean number
         return float(p.replace("₹", "").replace("$", "").replace(",", "").strip().split()[0]) 
     except:
         return 0
@@ -104,7 +148,7 @@ def get_ai_trust_score(product_title, store):
         trust_score += 10
     return min(max(trust_score, 0), 100)
 
-# --- 4. ROUTES ---
+# --- 5. ROUTES ---
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -162,9 +206,15 @@ def reset_request():
             return redirect(url_for('reset_request'))
     return render_template('reset_request.html', step='email')
 
+# --- MAIN ROUTE WITH TRANSLATION ---
 @app.route("/")
 @login_required
 def index():
+    # 1. Get Selected Language (Default: English)
+    lang = request.args.get('lang', 'en')
+    t = TRANSLATIONS.get(lang, TRANSLATIONS['en']) # Get dictionary for that language
+
+    # 2. Recommendation Logic
     recommendations = []
     last_search = SearchHistory.query.filter_by(user_id=current_user.id).order_by(SearchHistory.timestamp.desc()).first()
     query = "futuristic gadgets"
@@ -180,7 +230,9 @@ def index():
                 "link": item.get("link"), "score": trust_score
             })
     except: pass
-    return render_template("index.html", user=current_user, recommendations=recommendations, rec_topic=query)
+    
+    # 3. Pass translation dict 't' to the template
+    return render_template("index.html", user=current_user, recommendations=recommendations, rec_topic=query, t=t, lang=lang)
 
 @app.route("/account")
 @login_required
@@ -199,7 +251,6 @@ def update_profile():
     flash('Profile updated!', 'success')
     return redirect(url_for('account'))
 
-# --- WISHLIST ---
 @app.route("/wishlist")
 @login_required
 def wishlist():
@@ -233,7 +284,6 @@ def remove_wishlist(id):
         flash('Removed from Wishlist.', 'success')
     return redirect(url_for('wishlist'))
 
-# --- NEW: SHOPPING CART & INVOICE ---
 @app.route("/cart")
 @login_required
 def cart():
@@ -246,14 +296,10 @@ def cart():
 def add_to_cart():
     price_str = request.form.get("price")
     price_val = extract_price(price_str)
-    
     new_item = Cart(
-        user_id=current_user.id,
-        title=request.form.get("title"),
-        price=price_str,
-        price_val=price_val,
-        image=request.form.get("image"),
-        store=request.form.get("store")
+        user_id=current_user.id, title=request.form.get("title"),
+        price=price_str, price_val=price_val,
+        image=request.form.get("image"), store=request.form.get("store")
     )
     db.session.add(new_item)
     db.session.commit()
@@ -273,53 +319,32 @@ def remove_cart(id):
 @app.route("/checkout")
 @login_required
 def checkout():
-    # 1. Get Cart Data
     cart_items = Cart.query.filter_by(user_id=current_user.id).all()
     if not cart_items:
         flash("Your cart is empty!", "error")
         return redirect(url_for('cart'))
-        
     total_price = sum(item.price_val for item in cart_items)
     date_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    # 2. Render HTML for Invoice
-    rendered_html = render_template("invoice_pdf.html", 
-                                    user=current_user, 
-                                    items=cart_items, 
-                                    total=total_price, 
-                                    date=date_now)
-
-    # 3. Clear Cart (Simulate "Paid")
-    for item in cart_items:
-        db.session.delete(item)
+    rendered_html = render_template("invoice_pdf.html", user=current_user, items=cart_items, total=total_price, date=date_now)
+    for item in cart_items: db.session.delete(item)
     db.session.commit()
-
-    # 4. Generate PDF using xhtml2pdf
     pdf_buffer = io.BytesIO()
     pisa_status = pisa.CreatePDF(io.BytesIO(rendered_html.encode("utf-8")), dest=pdf_buffer)
-
-    if pisa_status.err:
-        return "Error creating PDF", 500
-
+    if pisa_status.err: return "Error creating PDF", 500
     pdf_buffer.seek(0)
-    
-    # 5. Download the PDF
     return send_file(pdf_buffer, as_attachment=True, download_name=f"Invoice_{current_user.username}.pdf", mimetype='application/pdf')
 
-# --- SEARCH & COMPARE ---
 @app.route("/search", methods=["GET", "POST"])
 @login_required
 def search():
     product = request.args.get("q") or request.form.get("product")
     sort_order = request.args.get("sort")
     if not product: return redirect(url_for('index'))
-
     if request.method == "POST" or (request.args.get("q") and not request.args.get("sort")):
         last = SearchHistory.query.filter_by(user_id=current_user.id).order_by(SearchHistory.timestamp.desc()).first()
         if not last or last.search_query != product:
             db.session.add(SearchHistory(user_id=current_user.id, search_query=product))
             db.session.commit()
-
     try:
         params = {"engine": "google_shopping", "q": product, "hl": "en", "gl": "in", "api_key": SERP_API_KEY}
         data = requests.get("https://serpapi.com/search", params=params).json()
