@@ -44,9 +44,23 @@
         .btn.del:hover { color: #ff3333; }
         
         .back-link { display: block; text-align: center; margin-top: 50px; color: #888; text-decoration: none; }
+
+        /* POPUP STYLE */
+        .flash { 
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%); 
+            background: var(--surface-color); color: var(--neon); border: 1px solid var(--neon); 
+            padding: 10px 20px; border-radius: 15px; z-index: 200; box-shadow: 0 0 15px var(--neon); 
+        }
     </style>
 </head>
 <body>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}<div class="flash">{{ message }}</div>{% endfor %}
+        {% endif %}
+    {% endwith %}
+
     <h1>My Wishlist</h1>
     <div class="grid">
         {% if wishlist %}
