@@ -63,7 +63,7 @@
             background: var(--surface-color); border-radius: 20px;
             box-shadow: inset 6px 6px 12px var(--shadow-dark), inset -6px -6px 12px var(--shadow-light);
             display: flex; align-items: center; padding: 5px 20px;
-            z-index: 20; /* Ensure clicks work */
+            z-index: 20; 
         }
         .search-box input {
             width: 100%; padding: 15px; border: none; background: transparent; outline: none; font-size: 1.1rem; color: #fff;
@@ -72,7 +72,7 @@
         /* ICONS */
         .icon { font-size: 1.5rem; color: #666; cursor: pointer; transition: 0.3s; margin: 0 5px; }
         .icon:hover { color: var(--neon); text-shadow: 0 0 10px var(--neon); }
-        .search-icon:hover { transform: scale(1.2); } /* Feedback on hover */
+        .search-icon:hover { transform: scale(1.2); } 
         
         .listening { color: #ff3333 !important; animation: pulse 1s infinite; text-shadow: 0 0 10px #ff3333; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
@@ -88,7 +88,6 @@
         }
         .action-btn:hover { color: var(--neon); transform: translateY(-3px); box-shadow: 0 0 15px rgba(0, 238, 255, 0.2); }
         
-        /* MAIN SEARCH BUTTON STYLE */
         .action-btn.primary { 
             background: var(--surface-color); color: var(--neon); 
             box-shadow: 6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light); 
@@ -102,11 +101,13 @@
         
         .rec-grid { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin-top: 20px; }
         
+        /* Updated Card to hold actions */
         .rec-card {
             background: var(--surface-color); border-radius: 25px; padding: 20px; width: 250px;
             box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
             text-decoration: none; color: #fff; transition: 0.3s;
             display: flex; flex-direction: column; align-items: center; border: 1px solid rgba(255,255,255,0.05);
+            position: relative;
         }
         .rec-card:hover { transform: translateY(-10px); box-shadow: 0 0 20px rgba(0,0,0,0.5); border-color: var(--neon); }
         
@@ -117,7 +118,16 @@
         }
         .rec-img-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
 
-        /* --- CLAY CHATBOT STYLES --- */
+        /* ADD CART BUTTON (Rec Card) */
+        .rec-add-cart {
+            margin-top: 10px; width: 100%; padding: 8px; border-radius: 10px; border: none;
+            background: var(--surface-color); color: var(--neon); font-weight: bold; cursor: pointer;
+            box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
+            transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 5px;
+        }
+        .rec-add-cart:hover { background: var(--neon); color: #1f242d; box-shadow: 0 0 10px var(--neon); }
+
+        /* CHATBOT STYLES */
         .chat-btn { 
             position: fixed; bottom: 30px; right: 30px; width: 70px; height: 70px; 
             border-radius: 50%; background: var(--surface-color); border: none; 
@@ -134,22 +144,18 @@
             display: none; flex-direction: column; overflow: hidden; z-index: 2000;
             border: 1px solid rgba(0, 238, 255, 0.2);
         }
-        
         .chat-header {
             padding: 20px; background: var(--surface-color); font-weight: bold; color: var(--neon);
             display: flex; justify-content: space-between; align-items: center;
             border-bottom: 1px solid rgba(255,255,255,0.05); text-shadow: 0 0 5px var(--neon);
         }
-        
         .chat-body { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
-
         .chat-msg {
             padding: 10px 15px; border-radius: 15px; max-width: 80%; font-size: 0.9rem;
             box-shadow: 3px 3px 6px var(--shadow-dark);
         }
         .bot { background: var(--surface-color); color: #ccc; align-self: flex-start; border-bottom-left-radius: 0; box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light); }
         .user { background: var(--neon); color: #1f242d; align-self: flex-end; border-bottom-right-radius: 0; box-shadow: 0 0 10px var(--neon); font-weight: 500; }
-
         .chat-input-area {
             padding: 15px; background: var(--surface-color); display: flex; gap: 10px; border-top: 1px solid rgba(255,255,255,0.05);
         }
@@ -163,6 +169,7 @@
         
         .footer-info { position: fixed; bottom: 10px; text-align: center; font-size: 0.8rem; color: rgba(255, 255, 255, 0.4); width: 100%; }
 
+        /* FLASH MESSAGES */
         .flash { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background: var(--surface-color); color: var(--neon); border: 1px solid var(--neon); padding: 10px 20px; border-radius: 15px; z-index: 200; box-shadow: 0 0 15px var(--neon); }
     </style>
 </head>
@@ -221,12 +228,24 @@
         <h3 style="text-align:center; color:#777;">{{ t['rec_title'] }} <span style="color:var(--neon);">"{{ rec_topic }}"</span></h3>
         <div class="rec-grid">
             {% for item in recommendations %}
-            <a href="{{ item.link }}" target="_blank" class="rec-card">
-                <div class="rec-img-box"><img src="{{ item.image }}"></div>
-                <div style="font-weight:bold; margin-bottom:5px;">{{ item.title[:30] }}...</div>
-                <div style="color:var(--neon); font-size:1.2rem; font-weight:bold; text-shadow: 0 0 5px rgba(0, 238, 255, 0.3);">{{ item.price }}</div>
-                <div style="font-size:0.8rem; color:#888;">AI Score: <span style="color:var(--neon);">{{ item.score }}%</span></div>
-            </a>
+            <div class="rec-card-wrap" style="position:relative;">
+                <a href="{{ item.link }}" target="_blank" class="rec-card">
+                    <div class="rec-img-box"><img src="{{ item.image }}"></div>
+                    <div style="font-weight:bold; margin-bottom:5px;">{{ item.title[:30] }}...</div>
+                    <div style="color:var(--neon); font-size:1.2rem; font-weight:bold; text-shadow: 0 0 5px rgba(0, 238, 255, 0.3);">{{ item.price }}</div>
+                    <div style="font-size:0.8rem; color:#888;">AI Score: <span style="color:var(--neon);">{{ item.score }}%</span></div>
+                </a>
+                
+                <form action="/add_to_cart" method="POST">
+                    <input type="hidden" name="title" value="{{ item.title }}">
+                    <input type="hidden" name="price" value="{{ item.price }}">
+                    <input type="hidden" name="image" value="{{ item.image }}">
+                    <input type="hidden" name="store" value="Recommendation">
+                    <button type="submit" class="rec-add-cart">
+                        <ion-icon name="cart"></ion-icon> Add
+                    </button>
+                </form>
+            </div>
             {% endfor %}
         </div>
     </div>
@@ -257,7 +276,6 @@
     </form>
 
     <script>
-        // BACKGROUND PARTICLES
         const canvas = document.getElementById('bg-canvas'); const ctx = canvas.getContext('2d');
         let particles = []; function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize); resize();
@@ -280,18 +298,13 @@
             } else { alert("Voice not supported."); }
         }
 
-        // IMAGE UPLOAD HANDLER
         function uploadImage(input) {
             if (input.files && input.files[0]) {
-                // We transfer the file to the dedicated form and submit
                 const form = document.getElementById('visualSearchForm');
                 const hiddenInput = document.getElementById('hiddenImgInput');
-                
-                // Create a new DataTransfer object to move the file
                 const dataTransfer = new DataTransfer();
                 dataTransfer.items.add(input.files[0]);
                 hiddenInput.files = dataTransfer.files;
-                
                 form.submit();
             }
         }
@@ -300,7 +313,6 @@
             window.location.href = `/?lang=${lang}`;
         }
 
-        // --- CHATBOT LOGIC ---
         function toggleChat() {
             const w = document.getElementById('chatWindow');
             w.style.display = (w.style.display === 'flex') ? 'none' : 'flex';
@@ -311,21 +323,15 @@
             const input = document.getElementById('chatInput');
             const msg = input.value.trim();
             if(!msg) return;
-            
             addMessage(msg, 'user');
             input.value = '';
-
             fetch('/chat', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ message: msg })
+                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ message: msg })
             })
             .then(res => res.json())
             .then(data => {
                 addMessage(data.response, 'bot');
-                if(data.redirect) {
-                    setTimeout(() => window.location.href = data.redirect, 1500);
-                }
+                if(data.redirect) { setTimeout(() => window.location.href = data.redirect, 1500); }
             });
         }
 
