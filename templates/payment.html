@@ -77,6 +77,15 @@
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100; justify-content: center; align-items: center; flex-direction: column; }
         .spinner { width: 50px; height: 50px; border: 5px solid var(--surface-color); border-top: 5px solid var(--neon); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .success-icon { font-size: 4rem; color: var(--neon); display: none; margin-bottom: 20px; animation: popIn 0.5s ease; }
+        @keyframes popIn { 0% { transform: scale(0); } 80% { transform: scale(1.2); } 100% { transform: scale(1); } }
+        
+        .home-btn {
+            margin-top: 20px; padding: 10px 30px; border-radius: 10px; background: var(--neon); 
+            color: #1f242d; border: none; font-weight: bold; cursor: pointer; display: none;
+            box-shadow: 0 0 15px var(--neon);
+        }
     </style>
 </head>
 <body>
@@ -122,18 +131,21 @@
                 </div>
             </div>
             
-            <button type="submit" class="pay-btn">Pay <span id="totalAmount"></span> & Download</button>
+            <button type="submit" class="pay-btn">Pay <span id="totalAmount"></span> & Download Invoice</button>
         </form>
     </div>
 
     <div id="loadingModal" class="modal">
-        <div class="spinner"></div>
-        <h2 style="color:#fff;">Processing Payment...</h2>
+        <div class="spinner" id="spinner"></div>
+        <ion-icon name="checkmark-circle" class="success-icon" id="successIcon"></ion-icon>
+        
+        <h2 id="modalText" style="color:#fff;">Processing Payment...</h2>
+        <button class="home-btn" id="homeBtn" onclick="window.location.href='/'">Back to Home</button>
     </div>
 
     <script>
-        // Get total from URL or Server
-        document.getElementById('totalAmount').innerText = "(Secure)";
+        // Get total from template
+        document.getElementById('totalAmount').innerText = "₹{{ total }}";
 
         function updateNum(input) {
             let val = input.value.replace(/\s/g, '').replace(/(.{4})/g, '$1 ').trim();
@@ -150,12 +162,24 @@
         function processPayment(e) {
             e.preventDefault();
             const modal = document.getElementById('loadingModal');
+            const spinner = document.getElementById('spinner');
+            const successIcon = document.getElementById('successIcon');
+            const text = document.getElementById('modalText');
+            const homeBtn = document.getElementById('homeBtn');
+
             modal.style.display = 'flex';
 
-            // Simulate Network Delay
+            // 1. Simulate Payment Processing (3 seconds)
             setTimeout(() => {
-                // Redirect to the ACTUAL PDF generation route
+                // 2. Trigger Download
                 window.location.href = "/generate_invoice"; 
+                
+                // 3. Update UI to "Success" State immediately after triggering download
+                spinner.style.display = 'none';
+                successIcon.style.display = 'block';
+                text.innerText = "Payment Successful!";
+                homeBtn.style.display = 'block';
+                
             }, 3000);
         }
     </script>
