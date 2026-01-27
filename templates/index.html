@@ -51,7 +51,7 @@
 
         /* MAIN SEARCH WRAPPER */
         .wrapper { 
-            width: 90%; max-width: 600px; margin-top: 50px; text-align: center;
+            width: 90%; max-width: 600px; margin-top: 100px; text-align: center; /* Increased top margin for balance */
             background: var(--surface-color); border-radius: 40px;
             box-shadow: 15px 15px 30px rgba(0,0,0,0.5), -10px -10px 30px rgba(255,255,255,0.05);
             padding: 50px; position: relative; z-index: 10;
@@ -96,12 +96,11 @@
         .action-btn.primary:hover { background: var(--neon); color: #1f242d; box-shadow: 0 0 20px var(--neon); }
 
         /* RECOMMENDATIONS */
-        .rec-section { margin-top: 50px; width: 100%; max-width: 900px; opacity: 0; animation: fadeUp 1s ease-out 0.5s forwards; }
+        .rec-section { margin-top: 50px; width: 100%; max-width: 900px; opacity: 0; animation: fadeUp 1s ease-out 0.5s forwards; margin-bottom: 20px;}
         @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } from { opacity: 0; transform: translateY(20px); } }
         
         .rec-grid { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin-top: 20px; }
         
-        /* Updated Card to hold actions */
         .rec-card {
             background: var(--surface-color); border-radius: 25px; padding: 20px; width: 250px;
             box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
@@ -167,7 +166,17 @@
         .send-icon { font-size: 1.5rem; color: var(--neon); cursor: pointer; align-self: center; transition: 0.2s; }
         .send-icon:hover { transform: scale(1.2); text-shadow: 0 0 10px var(--neon); }
         
-        .footer-info { position: fixed; bottom: 10px; text-align: center; font-size: 0.8rem; color: rgba(255, 255, 255, 0.4); width: 100%; }
+        /* FOOTER FIXED: No longer overlaps */
+        .footer-info { 
+            margin-top: 50px; 
+            margin-bottom: 20px;
+            text-align: center; 
+            font-size: 0.8rem; 
+            color: rgba(255, 255, 255, 0.4); 
+            width: 100%; 
+            position: relative; /* Changed from fixed */
+            z-index: 10;
+        }
 
         /* FLASH MESSAGES */
         .flash { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background: var(--surface-color); color: var(--neon); border: 1px solid var(--neon); padding: 10px 20px; border-radius: 15px; z-index: 200; box-shadow: 0 0 15px var(--neon); }
