@@ -29,7 +29,6 @@ cloudinary.config(
 )
 
 # --- DATABASE CONFIG ---
-# Use the Environment Variable in Render, or fall back to this placeholder
 DEFAULT_DB_URL = "cockroachdb://priyansu:Y0fHHK30_PACWW-77M0ilw@bald-owlet-21046.j77.aws-ap-south-1.cockroachlabs.cloud:26257/defaultdb?sslmode=require"
 
 database_url = os.environ.get('DATABASE_URL', DEFAULT_DB_URL)
@@ -50,9 +49,8 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# --- THE FIX: DISABLE "PLEASE LOG IN" MESSAGE ---
+# DISABLE "PLEASE LOG IN" MESSAGE
 login_manager.login_message = None 
-# -----------------------------------------------
 
 # --- 2. TRANSLATIONS ---
 TRANSLATIONS = {
@@ -271,7 +269,7 @@ def visual_search():
             
             if "visual_matches" in data and len(data["visual_matches"]) > 0:
                 best_match = data["visual_matches"][0].get("title")
-                flash(f"AI identified: {best_match}", "success")
+                # REMOVED the "AI Identified" flash message here.
                 return redirect(url_for('search', q=best_match))
             else:
                 flash("AI couldn't identify the image. Try a clearer photo.", "error")
