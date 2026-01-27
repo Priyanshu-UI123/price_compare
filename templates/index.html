@@ -112,22 +112,22 @@
         }
         .action-btn.primary:hover { background: var(--neon); color: #1f242d; box-shadow: 0 0 20px var(--neon); }
 
-        /* --- UPDATED RECOMMENDATIONS --- */
+        /* --- RECOMMENDATIONS --- */
         .rec-section { margin-top: 50px; width: 100%; max-width: 900px; opacity: 0; animation: fadeUp 1s ease-out 0.5s forwards; margin-bottom: 20px;}
         @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } from { opacity: 0; transform: translateY(20px); } }
         
         .rec-grid { 
             display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); /* Better responsiveness */
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); 
             gap: 30px; 
             margin-top: 20px; 
-            align-items: stretch; /* Forces equal height */
+            align-items: stretch; 
         }
         
         .rec-card-wrap {
             display: flex; 
             flex-direction: column; 
-            height: 100%; /* Fill the grid cell */
+            height: 100%; 
         }
 
         .rec-card {
@@ -135,8 +135,8 @@
             box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
             text-decoration: none; color: #fff; transition: 0.3s;
             display: flex; flex-direction: column; align-items: center; border: 1px solid rgba(255,255,255,0.05);
-            flex: 1; /* Grow to fill space */
-            justify-content: space-between; /* Space out content inside */
+            flex: 1; 
+            justify-content: space-between; 
         }
         .rec-card:hover { transform: translateY(-10px); box-shadow: 0 0 20px rgba(0,0,0,0.5); border-color: var(--neon); }
         
@@ -257,6 +257,10 @@
             <option value="hi" {% if lang == 'hi' %}selected{% endif %}>Hindi</option>
             <option value="od" {% if lang == 'od' %}selected{% endif %}>Odia</option>
         </select>
+
+        <a href="/account" class="clay-btn-sm" title="Go to Account" onclick="jarvisSpeak('Accessing user profile.')">
+            <ion-icon name="person" style="font-size:1.2rem;"></ion-icon> Account
+        </a>
 
         <a href="/cart" class="clay-btn-sm" title="Go to Cart" onclick="jarvisSpeak('Opening secure storage.')">
             <ion-icon name="cart" style="font-size:1.2rem;"></ion-icon> Cart
