@@ -31,7 +31,7 @@ cloudinary.config(
 # --- DATABASE CONFIG (COCKROACHDB) ---
 # Paste your CockroachDB URL below (or set it in Render Env Vars)
 # It usually ends with '?sslmode=verify-full'
-COCKROACH_DB_URL = "postgresql://priyansu:Y0fHHK30_PACWW-77M0ilw@bald-owlet-21046.j77.aws-ap-south-1.cockroachlabs.cloud:26257/defaultdb?sslmode=verify-full"
+COCKROACH_DB_URL = "postgresql://priyansu:Y0fHHK30_PACWW-77M0ilw@bald-owlet-21046.j77.aws-ap-south-1.cockroachlabs.cloud:26257/defaultdb?sslmode=verify-full&sslrootcert=system"
 
 database_url = os.environ.get('DATABASE_URL', COCKROACH_DB_URL)
 
