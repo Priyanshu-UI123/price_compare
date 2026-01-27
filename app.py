@@ -23,20 +23,18 @@ SERP_API_KEY = "d66eccb121b3453152187f2442537b0fe5b3c82c4b8d4d56b89ed4d52c9f01a6
 
 # CLOUDINARY CONFIG
 cloudinary.config(
-  cloud_name = "YOUR_CLOUD_NAME", 
-  api_key = "YOUR_API_KEY", 
-  api_secret = "YOUR_API_SECRET" 
+  cloud_name = "dexdiyp2g", 
+  api_key = "385994499446587", 
+  api_secret = "CNR7F68BiUiDwmvMlVTTeDaK2qE" 
 )
 
-# --- DATABASE CONFIG (FINAL COCKROACHDB FIX) ---
-# We use a placeholder here. It is BEST to set DATABASE_URL in Render Environment Variables.
-# If you run locally, replace 'PASSWORD' with your real password.
+# --- DATABASE CONFIG ---
+# Use the Environment Variable in Render, or fall back to this placeholder
 DEFAULT_DB_URL = "cockroachdb://priyansu:Y0fHHK30_PACWW-77M0ilw@bald-owlet-21046.j77.aws-ap-south-1.cockroachlabs.cloud:26257/defaultdb?sslmode=require"
 
 database_url = os.environ.get('DATABASE_URL', DEFAULT_DB_URL)
 
-# CRITICAL FIX: CockroachDB requires the 'cockroachdb://' prefix.
-# Render/Environment variables often give 'postgres://', so we auto-replace it here.
+# Auto-Fix: Ensure 'cockroachdb://' prefix is used
 if database_url:
     if database_url.startswith("postgres://"):
         database_url = database_url.replace("postgres://", "cockroachdb://", 1)
@@ -51,6 +49,10 @@ db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
+
+# --- THE FIX: DISABLE "PLEASE LOG IN" MESSAGE ---
+login_manager.login_message = None 
+# -----------------------------------------------
 
 # --- 2. TRANSLATIONS ---
 TRANSLATIONS = {
@@ -111,7 +113,7 @@ with app.app_context():
     try:
         db.create_all()
     except Exception as e:
-        print(f"DB Warning (Ignorable if tables exist): {e}")
+        print(f"DB Warning: {e}")
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -144,7 +146,6 @@ def get_ai_trust_score(product_title, store):
 
 # --- 5. ROUTES ---
 
-# --- THE "FIX" ROUTE ---
 @app.route('/init_db')
 def init_db():
     try:
